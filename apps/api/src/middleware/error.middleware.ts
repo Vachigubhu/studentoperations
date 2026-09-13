@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler } from "express";
-import { z, ZodError } from "zod";
+import { ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
@@ -9,7 +9,11 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     res.status(400).json({
       status: "error",
       message: "validation failed",
-      errors: z.treeifyError(error),
+      errors: error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+        code: issue.code,
+      })),
     });
 
     return;
@@ -20,6 +24,7 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
       status: "error",
       message: error.message,
     });
+
     return;
   }
 

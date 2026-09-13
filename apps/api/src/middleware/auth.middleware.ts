@@ -1,13 +1,14 @@
 import type { RequestHandler } from "express";
 import { verifyAccessToken } from "../utils/tokens.js";
 import { AppError } from "../utils/AppError.js";
+import type { UserRole } from "../types/roles.js";
 
 declare global {
   namespace Express {
     interface Request {
       user?: {
         userId: string;
-        role: string;
+        role: UserRole;
       };
     }
   }

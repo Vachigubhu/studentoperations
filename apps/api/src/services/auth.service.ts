@@ -1,7 +1,8 @@
 import { UserModel } from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
-import { createAccessToken, createRefreshToken } from "../utils/tokens.js";
+import { createAccessToken } from "../utils/tokens.js";
+import { createInitialRefreshSession } from "./refresh-token.service.js";
 
 type RegisterInput = {
   firstName: string;
@@ -66,6 +67,11 @@ export const loginUser = async (input: LoginInput) => {
     role: user.role,
   };
 
+  const refreshSession = await createInitialRefreshSession(
+    user._id.toString(),
+    user.role,
+  );
+
   return {
     user: {
       id: user._id.toString(),
@@ -74,7 +80,9 @@ export const loginUser = async (input: LoginInput) => {
       email: user.email,
       role: user.role,
     },
+
     accessToken: createAccessToken(payload),
-    refreshToken: createRefreshToken(payload),
+
+    refreshToken: refreshSession.refreshToken,
   };
 };

@@ -1,4 +1,5 @@
 import { Schema, model, type InferSchemaType } from "mongoose";
+import { USER_ROLES } from "../types/roles.js";
 
 const userSchema = new Schema(
   {
@@ -34,7 +35,7 @@ const userSchema = new Schema(
 
     role: {
       type: String,
-      enum: ["STUDENT", "STAFF", "MANAGER", "ADMIN", "SUPER_ADMIN"],
+      enum: USER_ROLES,
       default: "STUDENT",
     },
 
