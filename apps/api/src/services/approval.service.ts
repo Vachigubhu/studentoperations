@@ -3,6 +3,8 @@ import { ApprovalModel } from "../models/Approval.js";
 import { RequestModel } from "../models/Request.js";
 import { UserModel } from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
+import { eventBus } from "../events/event-bus.js";
+import { EVENTS } from "../events/events.js";
 
 type ApprovalDecision = "APPROVED" | "REJECTED" | "CORRECTION_REQUIRED";
 
@@ -76,9 +78,7 @@ export const createApproval = async (
 
     await request.save({ session });
 
-    await session.commitTransaction();
-
-    return approval.populate([
+    const populatedApproval = await approval.populate([
       {
         path: "approver",
         select: "firstName lastName email role",
@@ -88,8 +88,21 @@ export const createApproval = async (
         select: "title status priority",
       },
     ]);
+
+    await session.commitTransaction();
+
+    eventBus.emit(EVENTS.APPROVAL_DECISION, {
+      requestId: request._id.toString(),
+      studentId: request.student.toString(),
+      decision,
+    });
+
+    return populatedApproval;
   } catch (error) {
-    await session.abortTransaction();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+
     throw error;
   } finally {
     await session.endSession();

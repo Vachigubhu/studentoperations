@@ -7,6 +7,7 @@ import requestRoutes from "./request.routes.js";
 import documentRoutes from "./document.routes.js";
 import aprovalRoutes from "./approval.routes.js";
 import commentRoutes from "./comment.routes.js";
+import notificationRoutes from "./notification.routes.js";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/requests", requestRoutes);
 router.use(documentRoutes);
 router.use(aprovalRoutes);
 router.use(commentRoutes);
+router.use(notificationRoutes);
 
 export default router;
