@@ -5,6 +5,7 @@ import userRoutes from "./user.routes.js";
 import roleTestRoutes from "./role-test.routes.js";
 import requestRoutes from "./request.routes.js";
 import documentRoutes from "./document.routes.js";
+import aprovalRoutes from "./approval.routes.js";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use("/users", userRoutes);
 router.use("/role-tests", roleTestRoutes);
 router.use("/requests", requestRoutes);
 router.use(documentRoutes);
+router.use(aprovalRoutes);
 
 export default router;
