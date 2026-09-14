@@ -13,11 +13,13 @@ import {
 const createRefreshSession = async (
   userId: string,
   role: "STUDENT" | "STAFF" | "MANAGER" | "ADMIN" | "SUPER_ADMIN",
+  departmentId: string | undefined,
   familyId: string = crypto.randomUUID(),
 ) => {
   const refreshToken = createRefreshToken({
     userId,
     role,
+    departmentId,
   });
 
   await RefreshSessionModel.create({
@@ -36,8 +38,9 @@ const createRefreshSession = async (
 export const createInitialRefreshSession = async (
   userId: string,
   role: "STUDENT" | "STAFF" | "MANAGER" | "ADMIN" | "SUPER_ADMIN",
+  departmentId: string | undefined,
 ) => {
-  return createRefreshSession(userId, role);
+  return createRefreshSession(userId, role, departmentId);
 };
 
 export const refreshAccessToken = async (refreshToken: string) => {
@@ -95,12 +98,14 @@ export const refreshAccessToken = async (refreshToken: string) => {
   const newSession = await createRefreshSession(
     user._id.toString(),
     user.role,
+    user.department ? user.department.toString() : undefined,
     session.familyId,
   );
 
   const accessToken = createAccessToken({
     userId: user._id.toString(),
     role: user.role,
+    departmentId: user.department ? user.department.toString() : undefined,
   });
 
   return {

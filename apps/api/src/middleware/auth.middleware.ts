@@ -9,6 +9,7 @@ declare global {
       user?: {
         userId: string;
         role: UserRole;
+        departmentId?: string;
       };
     }
   }

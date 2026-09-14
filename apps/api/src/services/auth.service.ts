@@ -65,11 +65,13 @@ export const loginUser = async (input: LoginInput) => {
   const payload = {
     userId: user._id.toString(),
     role: user.role,
+    departmentId: user.department ? user.department.toString() : undefined,
   };
 
   const refreshSession = await createInitialRefreshSession(
     user._id.toString(),
     user.role,
+    user.department ? user.department.toString() : undefined,
   );
 
   return {

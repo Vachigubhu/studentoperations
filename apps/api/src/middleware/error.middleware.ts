@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
+import mongoose from "mongoose";
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   console.error(error);
@@ -23,6 +24,15 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     res.status(error.statusCode).json({
       status: "error",
       message: error.message,
+    });
+
+    return;
+  }
+
+  if (error instanceof mongoose.Error.CastError) {
+    res.status(400).json({
+      status: "error",
+      message: "Invalid resource ID",
     });
 
     return;

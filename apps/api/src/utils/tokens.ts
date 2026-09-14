@@ -5,12 +5,14 @@ import type { UserRole } from "../types/roles.js";
 export type AccessTokenPayload = {
   userId: string;
   role: UserRole;
+  departmentId?: string;
   type: "access";
 };
 
 export type RefreshTokenPayload = {
   userId: string;
   role: UserRole;
+  departmentId?: string;
   type: "refresh";
 };
 

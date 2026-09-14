@@ -39,6 +39,13 @@ const userSchema = new Schema(
       default: "STUDENT",
     },
 
+    department: {
+      type: Schema.Types.ObjectId,
+      ref: "Department",
+      default: null,
+      index: true,
+    },
+
     isActive: {
       type: Boolean,
       default: true,
