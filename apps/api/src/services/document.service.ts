@@ -42,6 +42,8 @@ export const uploadDocument = async (
       size: file.size,
       category,
     });
+
+    return document;
   } catch (error) {
     await deleteFile(storageKey);
     throw error;
