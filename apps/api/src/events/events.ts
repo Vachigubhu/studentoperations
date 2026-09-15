@@ -5,4 +5,5 @@ export const EVENTS = {
   APPROVAL_DECISION: "approval.decision",
   COMMENT_ADDED: "comment.added",
   DOCUMENT_UPLOADED: "document.uploaded",
+  AUDIT_LOG: "audit.log",
 } as const;

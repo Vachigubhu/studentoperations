@@ -4,6 +4,7 @@ import { RequestModel } from "../models/Request.js";
 import { AppError } from "../utils/AppError.js";
 import { deleteFile, saveFile } from "../utils/file-storage.js";
 import path from "node:path";
+import { emitAuditEvent } from "../events/audit.js";
 
 export const uploadDocument = async (
   requestId: string,
@@ -43,6 +44,21 @@ export const uploadDocument = async (
       category,
     });
 
+    emitAuditEvent(
+      userId,
+      "DOCUMENT_UPLOADED",
+      "Document",
+      document._id.toString(),
+      {
+        metadata: {
+          requestId: requestId,
+          category: document.category,
+          mimeType: document.mimeType,
+          size: document.size,
+        },
+      },
+    );
+
     return document;
   } catch (error) {
     await deleteFile(storageKey);
@@ -80,7 +96,21 @@ export const deleteDocument = async (documentId: string, userId: string) => {
 
   await deleteFile(document.storageKey);
 
+  const requestId = document.request.toString();
+
   await document.deleteOne();
+
+  emitAuditEvent(
+    userId,
+    "DOCUMENT_DELETED",
+    "Document",
+    document._id.toString(),
+    {
+      metadata: {
+        requestId,
+      },
+    },
+  );
 
   return document;
 };

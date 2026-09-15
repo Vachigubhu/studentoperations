@@ -1,3 +1,4 @@
+import { emitAuditEvent } from "../events/audit.js";
 import { NotificationModel } from "../models/Notification.js";
 import { AppError } from "../utils/AppError.js";
 
@@ -50,6 +51,13 @@ export const markNotificationAsRead = async (
   notification.readAt = new Date();
 
   await notification.save();
+
+  emitAuditEvent(
+    userId,
+    "NOTIFICATION_READ",
+    "Notification",
+    notification._id.toString(),
+  );
 
   return notification;
 };

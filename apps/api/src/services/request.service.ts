@@ -6,6 +6,9 @@ import { canTransition } from "../utils/request-status.js";
 import "../models/Department.js";
 import { UserModel } from "../models/User.js";
 import { UserRole } from "../types/roles.js";
+import { emitAuditEvent } from "../events/audit.js";
+import { eventBus } from "../events/event-bus.js";
+import { EVENTS } from "../events/events.js";
 
 type CreateRequestInput = {
   requestTypeId: string;
@@ -36,6 +39,20 @@ export const createRequest = async (
     priority: input.priority,
     status: "DRAFT",
   });
+
+  emitAuditEvent(
+    studentId,
+    "REQUEST_CREATED",
+    "Request",
+    request._id.toString(),
+    {
+      metadata: {
+        requestTypeId: request.requestType.toString(),
+        departmentId: request.department.toString(),
+        priority: request.priority,
+      },
+    },
+  );
 
   return request.populate([
     {
@@ -68,6 +85,13 @@ export const submitRequest = async (requestId: string, studentId: string) => {
 
   request.status = "SUBMITTED";
   request.submittedAt = new Date();
+
+  emitAuditEvent(
+    studentId,
+    "REQUEST_SUBMITTED",
+    "Request",
+    request._id.toString(),
+  );
 
   await request.save();
 
@@ -108,6 +132,7 @@ export const transitionRequest = async (
   departmentId: string,
   nextStatus: RequestStatus,
   userRole: UserRole,
+  actorId: string,
 ) => {
   const request = await RequestModel.findOne({
     _id: requestId,
@@ -168,6 +193,19 @@ export const transitionRequest = async (
 
   await request.save();
 
+  emitAuditEvent(
+    actorId,
+    "REQUEST_STATUS_CHANGED",
+    "Request",
+    request._id.toString(),
+    {
+      metadata: {
+        from: currentStatus,
+        to: nextStatus,
+      },
+    },
+  );
+
   return getStaffRequest(requestId, departmentId);
 };
 
@@ -209,6 +247,8 @@ export const assignRequest = async (
   requestId: string,
   departmentId: string,
   staffId: string,
+  actorId: string,
+  actorRole: UserRole,
 ) => {
   const request = await RequestModel.findOne({
     _id: requestId,
@@ -232,6 +272,18 @@ export const assignRequest = async (
 
   request.assignedTo = staff._id;
   await request.save();
+
+  emitAuditEvent(
+    actorId,
+    "REQUEST_ASSIGNED",
+    "Request",
+    request._id.toString(),
+    {
+      metadata: {
+        assignedTo: staffId,
+      },
+    },
+  );
 
   return getStaffRequest(requestId, departmentId);
 };

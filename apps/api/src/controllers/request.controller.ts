@@ -155,6 +155,8 @@ export const assignRequestController: RequestHandler<{ id: string }> = async (
       req.params.id,
       req.user.departmentId,
       staffId,
+      req.user.userId,
+      req.user.role
     );
 
     res.status(200).json({
@@ -186,6 +188,7 @@ export const transitionRequestController: RequestHandler<{
       req.user.departmentId,
       input.status,
       req.user.role,
+      req.user.userId,
     );
 
     res.status(200).json({

@@ -1,3 +1,4 @@
+import { emitAuditEvent } from "../events/audit.js";
 import { UserModel } from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
@@ -33,6 +34,13 @@ export const registerUser = async (input: RegisterInput) => {
     email: input.email,
     password: passwordHash,
   });
+
+  emitAuditEvent(
+    user._id.toString(),
+    "USER_REGISTERED",
+    "User",
+    user._id.toString(),
+  );
 
   return {
     id: user._id.toString(),
@@ -72,6 +80,13 @@ export const loginUser = async (input: LoginInput) => {
     user._id.toString(),
     user.role,
     user.department ? user.department.toString() : undefined,
+  );
+
+  emitAuditEvent(
+    user._id.toString(),
+    "USER_LOGIN",
+    "User",
+    user._id.toString(),
   );
 
   return {

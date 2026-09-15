@@ -5,6 +5,7 @@ import { UserModel } from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
 import { eventBus } from "../events/event-bus.js";
 import { EVENTS } from "../events/events.js";
+import { emitAuditEvent } from "../events/audit.js";
 
 type ApprovalDecision = "APPROVED" | "REJECTED" | "CORRECTION_REQUIRED";
 
@@ -96,6 +97,19 @@ export const createApproval = async (
       studentId: request.student.toString(),
       decision,
     });
+
+    emitAuditEvent(
+      approverId,
+      "APPROVAL_CREATED",
+      "Request",
+      request._id.toString(),
+      {
+        metadata: {
+          decision,
+          comment,
+        },
+      },
+    );
 
     return populatedApproval;
   } catch (error) {

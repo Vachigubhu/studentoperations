@@ -1,3 +1,4 @@
+import { emitAuditEvent } from "../events/audit.js";
 import { CommentModel } from "../models/Comment.js";
 import { AppError } from "../utils/AppError.js";
 import { getAccessibleRequest } from "../utils/request-access.js";
@@ -20,6 +21,18 @@ export const createComment = async (
     author: user.userId,
     body,
   });
+
+  emitAuditEvent(
+    user.userId,
+    "COMMENT_CREATED",
+    "Comment",
+    comment._id.toString(),
+    {
+      metadata: {
+        requestId: requestId,
+      },
+    },
+  );
 
   return comment.populate({
     path: "author",
@@ -65,6 +78,18 @@ export const updateComment = async (
 
   await comment.save();
 
+  emitAuditEvent(
+    user.userId,
+    "COMMENT_UPDATED",
+    "Comment",
+    comment._id.toString(),
+    {
+      metadata: {
+        requestId: comment.request.toString(),
+      },
+    },
+  );
+
   return comment.populate({
     path: "author",
     select: "firstName lastName email role",
@@ -91,5 +116,20 @@ export const deleteComment = async (
     throw new AppError(403, "You are not allowed to delete this comment");
   }
 
+  const requestId = comment.request.toString();
+
   await comment.deleteOne();
+
+  emitAuditEvent(
+    user.userId,
+    "COMMENT_DELETED",
+    "Comment",
+    comment._id.toString(),
+    {
+      metadata: {
+        requestId,
+      },
+    },
+  );
+
 };
