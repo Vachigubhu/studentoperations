@@ -9,6 +9,7 @@ import aprovalRoutes from "./approval.routes.js";
 import commentRoutes from "./comment.routes.js";
 import notificationRoutes from "./notification.routes.js";
 import auditRoutes from "./audit.routes.js";
+import conversationRoutes from "./conversation.routes.js";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use(aprovalRoutes);
 router.use(commentRoutes);
 router.use(notificationRoutes);
 router.use("/audit-logs", auditRoutes);
+router.use("/conversations", conversationRoutes);
 
 export default router;

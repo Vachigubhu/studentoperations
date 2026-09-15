@@ -7,6 +7,7 @@ export const NOTIFICATION_TYPES = [
   "APPROVAL_DECISION",
   "COMMENT_ADDED",
   "DOCUMENT_UPLOADED",
+  "MESSAGE_RECEIVED",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

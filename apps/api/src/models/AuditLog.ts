@@ -14,6 +14,7 @@ export const AUDIT_ACTIONS = [
   "DOCUMENT_UPLOADED",
   "DOCUMENT_DELETED",
   "NOTIFICATION_READ",
+  "MESSAGE_SENT",
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

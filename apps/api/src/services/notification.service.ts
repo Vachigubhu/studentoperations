@@ -10,7 +10,8 @@ type CreateNotificationInput = {
     | "REQUEST_STATUS_CHANGED"
     | "APPROVAL_DECISION"
     | "COMMENT_ADDED"
-    | "DOCUMENT_UPLOADED";
+    | "DOCUMENT_UPLOADED"
+    | "MESSAGE_RECEIVED";
   title: string;
   message: string;
   requestId?: string;
