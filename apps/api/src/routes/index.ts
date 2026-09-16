@@ -10,6 +10,7 @@ import commentRoutes from "./comment.routes.js";
 import notificationRoutes from "./notification.routes.js";
 import auditRoutes from "./audit.routes.js";
 import conversationRoutes from "./conversation.routes.js";
+import requestTypeRoutes from "./request-type.js";
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use(commentRoutes);
 router.use(notificationRoutes);
 router.use("/audit-logs", auditRoutes);
 router.use("/conversations", conversationRoutes);
+router.use("/request-types", requestTypeRoutes);
 
 export default router;
