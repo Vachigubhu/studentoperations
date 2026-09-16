@@ -15,6 +15,10 @@ import { StaffRequestsPage } from "./pages/StaffRequestsPage";
 import { StaffRequestDetailPage } from "./pages/StaffRequestDetailPage";
 import { ManagerRequestsPage } from "./pages/ManagerRequestsPage";
 import { ManagerRequestDetailPage } from "./pages/ManagerRequestDetailPage";
+import { AdminAuditLogsPage } from "./pages/AdminAuditLogsPage";
+import { AdminUsersPage } from "./pages/AdminUsersPage";
+import { AdminDepartmentsPage } from "./pages/AdminDepartmentsPage";
+import { AdminRequestTypesPage } from "./pages/AdminRequestTypesPage";
 
 const HomeRedirect = () => {
   const { isAuthenticated } = useAuth();
@@ -100,6 +104,43 @@ function App() {
             element={
               <RoleRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
                 <AdminDashboardPage />
+              </RoleRoute>
+            }
+          />
+
+          {/* Admin audit logs */}
+          <Route
+            path="/admin/audit-logs"
+            element={
+              <RoleRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
+                <AdminAuditLogsPage />
+              </RoleRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <RoleRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
+                <AdminUsersPage />
+              </RoleRoute>
+            }
+          />
+
+          <Route
+            path="/admin/departments"
+            element={
+              <RoleRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
+                <AdminDepartmentsPage />
+              </RoleRoute>
+            }
+          />
+
+          <Route
+            path="/admin/request-types"
+            element={
+              <RoleRoute allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
+                <AdminRequestTypesPage />
               </RoleRoute>
             }
           />

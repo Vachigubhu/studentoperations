@@ -1,5 +1,10 @@
 import type { RequestHandler } from "express";
-import { getActiveRequestTypes } from "../services/request-type.service.js";
+
+import {
+  getActiveRequestTypes,
+  listRequestTypes,
+} from "../services/request-type.service.js";
+
 import { AppError } from "../utils/AppError.js";
 
 export const getRequestTypesController: RequestHandler = async (
@@ -12,7 +17,12 @@ export const getRequestTypesController: RequestHandler = async (
       throw new AppError(401, "Authentication required");
     }
 
-    const requestTypes = await getActiveRequestTypes();
+    const isAdmin =
+      req.user.role === "ADMIN" || req.user.role === "SUPER_ADMIN";
+
+    const requestTypes = isAdmin
+      ? await listRequestTypes()
+      : await getActiveRequestTypes();
 
     res.status(200).json({
       status: "success",
