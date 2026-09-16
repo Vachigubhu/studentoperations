@@ -19,6 +19,8 @@ import { AdminAuditLogsPage } from "./pages/AdminAuditLogsPage";
 import { AdminUsersPage } from "./pages/AdminUsersPage";
 import { AdminDepartmentsPage } from "./pages/AdminDepartmentsPage";
 import { AdminRequestTypesPage } from "./pages/AdminRequestTypesPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
+import { MessagesPage } from "./pages/MessagePage";
 
 const HomeRedirect = () => {
   const { isAuthenticated } = useAuth();
@@ -226,10 +228,7 @@ function App() {
                   "SUPER_ADMIN",
                 ]}
               >
-                <PlaceholderPage
-                  title="Messages"
-                  description="Real-time conversations and collaboration."
-                />
+                <MessagesPage />
               </RoleRoute>
             }
           />
@@ -247,10 +246,7 @@ function App() {
                   "SUPER_ADMIN",
                 ]}
               >
-                <PlaceholderPage
-                  title="Notifications"
-                  description="Stay updated on important StudentOps activity."
-                />
+                <NotificationsPage />
               </RoleRoute>
             }
           />

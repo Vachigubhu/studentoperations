@@ -2,6 +2,7 @@ import { AppError } from "../utils/AppError.js";
 import { ConversationModel } from "../models/Conversation.js";
 import { UserModel } from "../models/User.js";
 import { getAccessibleRequest } from "../utils/request-access.js";
+import { MessageModel } from "../models/Message.js";
 
 type ConversationUser = {
   userId: string;
@@ -104,4 +105,22 @@ export const getUserConversations = async (userId: string) => {
       lastMessageAt: -1,
       createdAt: -1,
     });
+};
+
+export const getTotalUnreadMessageCount = async (userId: string) => {
+  const conversations = await ConversationModel.find({
+    participants: userId,
+  }).select("_id");
+
+  const conversationIds = conversations.map((conversation) => conversation._id);
+
+  if (conversationIds.length === 0) {
+    return 0;
+  }
+
+  return MessageModel.countDocuments({
+    conversation: { $in: conversationIds },
+    sender: { $ne: userId },
+    readAt: null,
+  });
 };

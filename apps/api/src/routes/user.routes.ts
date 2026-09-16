@@ -1,19 +1,21 @@
 import { Router } from "express";
-
-import { getCurrentUser } from "../controllers/user.controller.js";
-
+import {
+  getCurrentUser,
+  getUserDirectory,
+} from "../controllers/user.controller.js";
 import {
   listUsersController,
   updateUserRoleController,
   updateUserStatusController,
 } from "../controllers/admin-user.controller.js";
-
 import { authenticate } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/authorize.middleware.js";
 
 const router = Router();
 
 router.get("/me", authenticate, getCurrentUser);
+
+router.get("/directory", authenticate, getUserDirectory);
 
 router.get(
   "/",

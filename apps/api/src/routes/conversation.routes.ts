@@ -5,12 +5,11 @@ import {
   createConversationSchema,
   sendMessageSchema,
 } from "../validators/message.validator.js";
-
 import {
   createConversationController,
+  getTotalUnreadMessageCountController,
   listConversationsController,
 } from "../controllers/conversation.controller.js";
-
 import {
   sendMessageController,
   listMessagesController,
@@ -29,6 +28,8 @@ router.post(
   validate(createConversationSchema),
   createConversationController,
 );
+
+router.get("/unread-count", authenticate, getTotalUnreadMessageCountController);
 
 router.patch("/:id/messages/read", markMessagesAsReadController);
 

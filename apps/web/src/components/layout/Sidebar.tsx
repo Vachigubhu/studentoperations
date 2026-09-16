@@ -1,9 +1,12 @@
 import { NavLink } from "react-router-dom";
 import { navigationItems } from "../../config/navigation";
 import { useAuth } from "../../context/AuthContext";
+import { useTotalUnreadMessageCount } from "../../hooks/useConversations";
 
 export const Sidebar = () => {
   const { user } = useAuth();
+
+  const { data: totalUnreadMessages = 0 } = useTotalUnreadMessageCount();
 
   const visibleItems = navigationItems.filter(
     (item) => user && item.roles.includes(user.role),
@@ -18,14 +21,20 @@ export const Sidebar = () => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `block rounded-lg px-3 py-2 text-sm font-medium transition ${
+                `flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition ${
                   isActive
                     ? "bg-gray-900 text-white"
                     : "text-gray-700 hover:bg-gray-100"
                 }`
               }
             >
-              {item.label}
+              <span>{item.label}</span>
+
+              {item.label === "Messages" && totalUnreadMessages > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-black px-1.5 text-xs font-semibold text-white">
+                  {totalUnreadMessages > 99 ? "99+" : totalUnreadMessages}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
