@@ -62,7 +62,7 @@ router.get(
 router.post(
   "/:id/assign",
   authenticate,
-  authorize("MANAGER", "ADMIN", "SUPER_ADMIN"),
+  authorize("STAFF", "MANAGER", "ADMIN", "SUPER_ADMIN"),
   assignRequestController,
 );
 

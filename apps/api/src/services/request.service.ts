@@ -209,13 +209,33 @@ export const transitionRequest = async (
   return getStaffRequest(requestId, departmentId);
 };
 
-export const getStaffRequests = async (departmentId: string) => {
-  return RequestModel.find({
+export const getStaffRequests = async (
+  departmentId: string,
+  filters?: {
+    status?: RequestStatus;
+    priority?: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+  },
+) => {
+  const query: {
+    department: string;
+    status?: RequestStatus | { $in: RequestStatus[] };
+    priority?: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+  } = {
     department: departmentId,
     status: {
       $in: ["SUBMITTED", "UNDER_REVIEW", "CORRECTION_REQUIRED", "APPROVED"],
     },
-  })
+  };
+
+  if (filters?.status) {
+    query.status = filters.status;
+  }
+
+  if (filters?.priority) {
+    query.priority = filters.priority;
+  }
+
+  return RequestModel.find(query)
     .populate("requestType", "name code")
     .populate("department", "name code")
     .populate("student", "firstName lastName email")

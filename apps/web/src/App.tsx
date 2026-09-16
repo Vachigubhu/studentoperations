@@ -11,6 +11,8 @@ import { NewRequestPage } from "./pages/NewRequestPage";
 import { LoginPage } from "./pages/LoginPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { RequestDetailPage } from "./pages/RequestDetailPage";
+import { StaffRequestsPage } from "./pages/StaffRequestsPage";
+import { StaffRequestDetailPage } from "./pages/StaffRequestDetailPage";
 
 const HomeRedirect = () => {
   const { isAuthenticated } = useAuth();
@@ -110,10 +112,17 @@ function App() {
             path="/staff/requests"
             element={
               <RoleRoute allowedRoles={["STAFF"]}>
-                <PlaceholderPage
-                  title="Staff Requests"
-                  description="Review and process assigned student requests."
-                />
+                <StaffRequestsPage />
+              </RoleRoute>
+            }
+          />
+
+          {/* Staff request detail */}
+          <Route
+            path="/staff/requests/:id"
+            element={
+              <RoleRoute allowedRoles={["STAFF"]}>
+                <StaffRequestDetailPage />
               </RoleRoute>
             }
           />

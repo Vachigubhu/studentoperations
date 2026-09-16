@@ -62,7 +62,15 @@ export type StudentRequest = {
   description: string;
   status: RequestStatus;
   priority: RequestPriority;
-  assignedTo?: string | null;
+  assignedTo:
+    | string
+    | {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+      }
+    | null;
   submittedAt?: string | null;
   completedAt?: string | null;
   createdAt: string;

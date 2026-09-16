@@ -13,6 +13,11 @@ import {
 import { createRequestSchema } from "../validators/request.validator.js";
 import { AppError } from "../utils/AppError.js";
 import { transitionRequestSchema } from "../validators/request-status.validator.js";
+import {
+  REQUEST_PRIORITIES,
+  REQUEST_STATUSES,
+  type RequestStatus,
+} from "../types/request.js";
 
 export const createRequestController: RequestHandler = async (
   req,
@@ -156,7 +161,7 @@ export const assignRequestController: RequestHandler<{ id: string }> = async (
       req.user.departmentId,
       staffId,
       req.user.userId,
-      req.user.role
+      req.user.role,
     );
 
     res.status(200).json({
@@ -215,11 +220,35 @@ export const getStaffRequestsController: RequestHandler = async (
       throw new AppError(403, "User is not assigned to a department");
     }
 
-    const requests = await getStaffRequests(req.user.departmentId);
+    const status =
+      typeof req.query.status === "string" ? req.query.status : undefined;
+
+    const priority =
+      typeof req.query.priority === "string" ? req.query.priority : undefined;
+
+    if (status && !REQUEST_STATUSES.includes(status as RequestStatus)) {
+      throw new AppError(400, "Invalid request status");
+    }
+
+    if (
+      priority &&
+      !REQUEST_PRIORITIES.includes(
+        priority as (typeof REQUEST_PRIORITIES)[number],
+      )
+    ) {
+      throw new AppError(400, "Invalid request priority");
+    }
+
+    const requests = await getStaffRequests(req.user.departmentId, {
+      status: status as RequestStatus | undefined,
+      priority: priority as (typeof REQUEST_PRIORITIES)[number] | undefined,
+    });
 
     res.status(200).json({
       status: "success",
-      data: requests,
+      data: {
+        requests,
+      },
     });
   } catch (error) {
     next(error);
