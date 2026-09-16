@@ -26,6 +26,60 @@ export type RequestType = {
   isActive: boolean;
 };
 
+export type RequestStudent =
+  | string
+  | {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+
+export type RequestAssignedTo =
+  | string
+  | {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    }
+  | null;
+
+export type StudentRequest = {
+  _id: string;
+
+  student: RequestStudent;
+
+  requestType:
+    | string
+    | {
+        _id: string;
+        name: string;
+        code: string;
+      };
+
+  department:
+    | string
+    | {
+        _id: string;
+        name: string;
+        code: string;
+      };
+
+  title: string;
+  description: string;
+
+  status: RequestStatus;
+  priority: RequestPriority;
+
+  assignedTo: RequestAssignedTo;
+
+  submittedAt?: string | null;
+  completedAt?: string | null;
+
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type GetRequestResponse = {
   status: string;
@@ -39,42 +93,6 @@ export type CreateRequestResponse = {
   data: {
     request: StudentRequest;
   };
-};
-
-export type StudentRequest = {
-  _id: string;
-  student: string;
-  requestType:
-    | string
-    | {
-        _id: string;
-        name: string;
-        code: string;
-      };
-  department:
-    | string
-    | {
-        _id: string;
-        name: string;
-        code: string;
-      };
-  title: string;
-  description: string;
-  status: RequestStatus;
-  priority: RequestPriority;
-  assignedTo:
-    | string
-    | {
-        _id: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-      }
-    | null;
-  submittedAt?: string | null;
-  completedAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
 };
 
 export type RequestsResponse = {
@@ -96,6 +114,13 @@ export type CreateRequestInput = {
   title: string;
   description: string;
   priority?: RequestPriority;
+};
+
+export type SubmitRequestResponse = {
+  status: string;
+  data: {
+    request: StudentRequest;
+  };
 };
 
 export const getRequests = async () => {
@@ -122,13 +147,6 @@ export const createRequest = async (input: CreateRequestInput) => {
   return response.data;
 };
 
-export type SubmitRequestResponse = {
-  status: string;
-  data: {
-    request: StudentRequest;
-  };
-};
-
 export const submitRequest = async (requestId: string) => {
   const response = await api.post<SubmitRequestResponse>(
     `/requests/${requestId}/submit`,
@@ -136,5 +154,3 @@ export const submitRequest = async (requestId: string) => {
 
   return response.data.data.request;
 };
-
-

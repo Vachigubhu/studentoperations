@@ -13,12 +13,38 @@ import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { RequestDetailPage } from "./pages/RequestDetailPage";
 import { StaffRequestsPage } from "./pages/StaffRequestsPage";
 import { StaffRequestDetailPage } from "./pages/StaffRequestDetailPage";
+import { ManagerRequestsPage } from "./pages/ManagerRequestsPage";
+import { ManagerRequestDetailPage } from "./pages/ManagerRequestDetailPage";
 
 const HomeRedirect = () => {
   const { isAuthenticated } = useAuth();
 
   return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
 };
+
+function RoleBasedDashboard() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return null;
+  }
+
+  switch (user.role) {
+    case "STAFF":
+      return <StaffDashboardPage />;
+
+    case "MANAGER":
+      return <ManagerDashboardPage />;
+
+    case "ADMIN":
+    case "SUPER_ADMIN":
+      return <AdminDashboardPage />;
+
+    case "STUDENT":
+    default:
+      return <DashboardPage />;
+  }
+}
 
 function App() {
   return (
@@ -43,7 +69,7 @@ function App() {
                   "SUPER_ADMIN",
                 ]}
               >
-                <DashboardPage />
+                <RoleBasedDashboard />
               </RoleRoute>
             }
           />
@@ -132,10 +158,16 @@ function App() {
             path="/manager/requests"
             element={
               <RoleRoute allowedRoles={["MANAGER"]}>
-                <PlaceholderPage
-                  title="Manager Requests"
-                  description="Manage departmental requests and workflows."
-                />
+                <ManagerRequestsPage />
+              </RoleRoute>
+            }
+          />
+
+          <Route
+            path="/manager/requests/:id"
+            element={
+              <RoleRoute allowedRoles={["MANAGER"]}>
+                <ManagerRequestDetailPage />
               </RoleRoute>
             }
           />
