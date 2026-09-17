@@ -1,41 +1,35 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useStaffRequests } from "../hooks/useStaffRequests";
+import { useRequests } from "../hooks/useRequests";
 
-export const StaffDashboardPage = () => {
+export const StudentDashboardPage = () => {
   const { user } = useAuth();
 
-  const { data, isLoading, isError } = useStaffRequests();
+  const { data, isLoading, isError } = useRequests();
 
   const requests = data?.data.requests ?? [];
 
   const total = requests.length;
 
-  const pendingReview = requests.filter(
+  const pending = requests.filter(
     (request) =>
       request.status === "SUBMITTED" || request.status === "UNDER_REVIEW",
   ).length;
 
-  const assigned = requests.filter((request) =>
-    Boolean(request.assignedTo),
+  const approved = requests.filter(
+    (request) => request.status === "APPROVED",
   ).length;
 
-  const unassigned = requests.filter((request) => !request.assignedTo).length;
-
-  const urgent = requests.filter(
-    (request) => request.priority === "URGENT",
-  ).length;
-
-  const highPriority = requests.filter(
-    (request) => request.priority === "HIGH",
+  const completed = requests.filter(
+    (request) => request.status === "COMPLETED",
   ).length;
 
   const correctionRequired = requests.filter(
     (request) => request.status === "CORRECTION_REQUIRED",
   ).length;
 
-  const completed = requests.filter(
-    (request) => request.status === "COMPLETED",
+  const rejected = requests.filter(
+    (request) => request.status === "REJECTED",
   ).length;
 
   const recentRequests = [...requests]
@@ -64,11 +58,9 @@ export const StaffDashboardPage = () => {
   if (isError) {
     return (
       <div className="mx-auto max-w-7xl px-6 py-10">
-        <h1 className="text-2xl font-bold text-gray-900">Staff Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
 
-        <p className="mt-2 text-red-600">
-          Unable to load department request data.
-        </p>
+        <p className="mt-2 text-red-600">Unable to load your dashboard data.</p>
       </div>
     );
   }
@@ -79,21 +71,19 @@ export const StaffDashboardPage = () => {
         <p className="text-sm font-medium text-gray-500">StudentOps</p>
 
         <h1 className="mt-1 text-3xl font-bold tracking-tight text-gray-900">
-          Staff Dashboard
+          Student Dashboard
         </h1>
 
         <p className="mt-2 text-gray-600">Welcome back, {user?.firstName}.</p>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Department Requests" value={total} />
-        <StatCard label="Pending Review" value={pendingReview} />
-        <StatCard label="Assigned" value={assigned} />
-        <StatCard label="Unassigned" value={unassigned} />
-        <StatCard label="Urgent" value={urgent} />
-        <StatCard label="High Priority" value={highPriority} />
-        <StatCard label="Correction Required" value={correctionRequired} />
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StatCard label="Total Requests" value={total} />
+        <StatCard label="Pending" value={pending} />
+        <StatCard label="Approved" value={approved} />
         <StatCard label="Completed" value={completed} />
+        <StatCard label="Correction Required" value={correctionRequired} />
+        <StatCard label="Rejected" value={rejected} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -105,30 +95,37 @@ export const StaffDashboardPage = () => {
               </h2>
 
               <p className="mt-1 text-sm text-gray-500">
-                Latest requests in your department.
+                Your latest request activity.
               </p>
             </div>
 
             <Link
-              to="/staff/requests"
+              to="/requests"
               className="text-sm font-medium text-gray-700 hover:text-gray-900"
             >
-              View queue
+              View all
             </Link>
           </div>
 
           {recentRequests.length === 0 ? (
             <div className="px-6 py-10 text-center">
               <p className="text-gray-500">
-                There are no requests in your department.
+                You haven't created any requests yet.
               </p>
+
+              <Link
+                to="/requests/new"
+                className="mt-4 inline-block rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+              >
+                Create your first request
+              </Link>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
               {recentRequests.map((request) => (
                 <Link
                   key={request._id}
-                  to={`/staff/requests/${request._id}`}
+                  to={`/requests/${request._id}`}
                   className="block px-6 py-4 hover:bg-gray-50"
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -145,12 +142,8 @@ export const StaffDashboardPage = () => {
                     <StatusBadge status={request.status} />
                   </div>
 
-                  <div className="mt-2 flex gap-3 text-xs text-gray-400">
-                    <span>{request.priority}</span>
-
-                    <span>
-                      {new Date(request.createdAt).toLocaleDateString()}
-                    </span>
+                  <div className="mt-2 text-xs text-gray-400">
+                    {new Date(request.createdAt).toLocaleDateString()}
                   </div>
                 </Link>
               ))}
@@ -167,15 +160,15 @@ export const StaffDashboardPage = () => {
 
           <div className="space-y-3 p-6">
             <QuickAction
-              to="/staff/requests"
-              title="Request Queue"
-              description="Review and manage department requests."
+              to="/requests/new"
+              title="New Request"
+              description="Submit a new service request."
             />
 
             <QuickAction
-              to="/messages"
-              title="Messages"
-              description="Communicate with students and staff."
+              to="/requests"
+              title="My Requests"
+              description="View and track your requests."
             />
 
             <QuickAction
@@ -185,9 +178,9 @@ export const StaffDashboardPage = () => {
             />
 
             <QuickAction
-              to="/profile"
-              title="My Profile"
-              description="View your account information."
+              to="/messages"
+              title="Messages"
+              description="Communicate with staff."
             />
           </div>
         </section>

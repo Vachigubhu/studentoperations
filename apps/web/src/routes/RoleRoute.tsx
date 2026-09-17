@@ -7,6 +7,24 @@ type RoleRouteProps = {
   children: React.ReactNode;
 };
 
+const getDashboardPath = (role: UserRole) => {
+  switch (role) {
+    case "STAFF":
+      return "/staff/dashboard";
+
+    case "MANAGER":
+      return "/manager/dashboard";
+
+    case "ADMIN":
+    case "SUPER_ADMIN":
+      return "/admin/dashboard";
+
+    case "STUDENT":
+    default:
+      return "/dashboard";
+  }
+};
+
 export const RoleRoute = ({ allowedRoles, children }: RoleRouteProps) => {
   const { user, isLoading, isAuthenticated } = useAuth();
 
@@ -23,7 +41,7 @@ export const RoleRoute = ({ allowedRoles, children }: RoleRouteProps) => {
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={getDashboardPath(user.role)} replace />;
   }
 
   return children;

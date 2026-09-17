@@ -2,14 +2,12 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { AppLayout } from "./layouts/AppLayout";
 import { RoleRoute } from "./routes/RoleRoute";
-import { DashboardPage } from "./pages/DashboardPage";
 import { StaffDashboardPage } from "./pages/StaffDashboardPage";
 import { ManagerDashboardPage } from "./pages/ManagerDashboardPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { RequestsPage } from "./pages/RequestsPage";
 import { NewRequestPage } from "./pages/NewRequestPage";
 import { LoginPage } from "./pages/LoginPage";
-import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { RequestDetailPage } from "./pages/RequestDetailPage";
 import { StaffRequestsPage } from "./pages/StaffRequestsPage";
 import { StaffRequestDetailPage } from "./pages/StaffRequestDetailPage";
@@ -21,11 +19,35 @@ import { AdminDepartmentsPage } from "./pages/AdminDepartmentsPage";
 import { AdminRequestTypesPage } from "./pages/AdminRequestTypesPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { MessagesPage } from "./pages/MessagePage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { StudentDashboardPage } from "./pages/StudentDashboardPage";
 
 const HomeRedirect = () => {
-  const { isAuthenticated } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+  if (isLoading) {
+    return null;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  switch (user.role) {
+    case "STAFF":
+      return <Navigate to="/staff/dashboard" replace />;
+
+    case "MANAGER":
+      return <Navigate to="/manager/dashboard" replace />;
+
+    case "ADMIN":
+    case "SUPER_ADMIN":
+      return <Navigate to="/admin/dashboard" replace />;
+
+    case "STUDENT":
+    default:
+      return <Navigate to="/dashboard" replace />;
+  }
 };
 
 function RoleBasedDashboard() {
@@ -48,7 +70,7 @@ function RoleBasedDashboard() {
 
     case "STUDENT":
     default:
-      return <DashboardPage />;
+      return <StudentDashboardPage />;
   }
 }
 
@@ -264,10 +286,7 @@ function App() {
                   "SUPER_ADMIN",
                 ]}
               >
-                <PlaceholderPage
-                  title="Profile"
-                  description="Manage your StudentOps profile."
-                />
+                <ProfilePage />
               </RoleRoute>
             }
           />

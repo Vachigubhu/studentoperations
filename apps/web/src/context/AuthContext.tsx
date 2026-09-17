@@ -56,17 +56,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await loginRequest({
-      email,
-      password,
-    });
+    const response = await loginRequest({ email, password });
 
     authStorage.setTokens(
       response.data.accessToken,
       response.data.refreshToken,
     );
 
-    setUser(response.data.user);
+    const currentUser = await getCurrentUser();
+
+    setUser(currentUser);
   };
 
   const logout = () => {
@@ -98,4 +97,3 @@ export const useAuth = () => {
 
   return context;
 };
-
