@@ -12,6 +12,7 @@ import auditRoutes from "./audit.routes.js";
 import conversationRoutes from "./conversation.routes.js";
 import requestTypeRoutes from "./request-type.routes.js";
 import departmentRoutes from "./department.routes.js";
+import { requestDocumentRouter } from "./document.routes.js";
 
 const router = Router();
 
@@ -20,6 +21,7 @@ router.use("/health", healthRoutes);
 router.use("/users", userRoutes);
 router.use("/role-tests", roleTestRoutes);
 router.use("/requests", requestRoutes);
+router.use("/requests", requestDocumentRouter);
 router.use("/documents", documentRoutes);
 router.use(aprovalRoutes);
 router.use(commentRoutes);

@@ -1,38 +1,44 @@
 import { Router } from "express";
+
 import {
   uploadDocumentController,
   getStudentDocumentsController,
   deleteDocumentController,
   downloadDocumentController,
 } from "../controllers/document.controller.js";
+
 import { authenticate } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/authorize.middleware.js";
 import { uploadDocument } from "../middleware/upload.middleware.js";
 
-const router = Router();
+const requestDocumentRouter = Router();
 
-router.post(
-  "/requests/:id/documents",
+requestDocumentRouter.post(
+  "/:id/documents",
   authenticate,
   authorize("STUDENT"),
   uploadDocument.single("file"),
   uploadDocumentController,
 );
 
-router.get(
-  "/requests/:id/documents",
+requestDocumentRouter.get(
+  "/:id/documents",
   authenticate,
   authorize("STUDENT"),
   getStudentDocumentsController,
 );
 
-router.delete(
+const documentRouter = Router();
+
+documentRouter.delete(
   "/:id",
   authenticate,
   authorize("STUDENT"),
   deleteDocumentController,
 );
 
-router.get("/:id/download", authenticate, downloadDocumentController);
+documentRouter.get("/:id/download", authenticate, downloadDocumentController);
 
-export default router;
+export { requestDocumentRouter };
+
+export default documentRouter;
