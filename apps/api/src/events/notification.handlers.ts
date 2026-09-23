@@ -1,6 +1,7 @@
 import { eventBus } from "./event-bus.js";
 import { EVENTS } from "./events.js";
 import { createNotification } from "../services/notification.service.js";
+import { emitToUser } from "../socket/socket-server.js";
 
 eventBus.on(
   EVENTS.APPROVAL_DECISION,
@@ -11,13 +12,11 @@ eventBus.on(
   }) => {
     const decisionMessages: Record<string, string> = {
       APPROVED: "Your request has been approved.",
-
       REJECTED: "Your request has been rejected.",
-
       CORRECTION_REQUIRED: "Your request requires correction.",
     };
 
-    await createNotification({
+    const notification = await createNotification({
       recipientId: payload.studentId,
       type: "APPROVAL_DECISION",
       title: "Request decision updated",
@@ -26,5 +25,7 @@ eventBus.on(
         "Your request status has been updated.",
       requestId: payload.requestId,
     });
+
+    emitToUser(payload.studentId, "notification:new", notification);
   },
 );

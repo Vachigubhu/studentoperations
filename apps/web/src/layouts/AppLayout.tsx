@@ -1,10 +1,10 @@
 import { Link, Outlet } from "react-router-dom";
-
+import { useRealtime } from "../hooks/useRealtime";
 import { useAuth } from "../context/AuthContext";
-
 import { Sidebar } from "../components/layout/Sidebar";
 
 export const AppLayout = () => {
+  useRealtime();
   const { user, logout } = useAuth();
 
   return (

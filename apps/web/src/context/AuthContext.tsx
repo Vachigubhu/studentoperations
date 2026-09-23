@@ -9,6 +9,7 @@ import { getCurrentUser, login as loginRequest } from "../api/auth";
 import type { User } from "../types/auth";
 import { authStorage } from "../utils/auth-storage";
 import { onLogoutEvent } from "../utils/auth-events";
+import { connectSocket, disconnectSocket } from "../socket/socket";
 
 type AuthContextValue = {
   user: User | null;
@@ -38,7 +39,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const currentUser = await getCurrentUser();
 
         setUser(currentUser);
+
+        connectSocket();
       } catch {
+        disconnectSocket();
         authStorage.clear();
         setUser(null);
       } finally {
@@ -51,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     return onLogoutEvent(() => {
+      disconnectSocket();
       setUser(null);
     });
   }, []);
@@ -63,12 +68,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       response.data.refreshToken,
     );
 
-    const currentUser = await getCurrentUser();
+    setUser(response.data.user);
 
-    setUser(currentUser);
+    connectSocket();
   };
 
   const logout = () => {
+    disconnectSocket();
     authStorage.clear();
     setUser(null);
   };
