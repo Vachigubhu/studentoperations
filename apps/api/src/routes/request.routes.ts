@@ -12,6 +12,7 @@ import {
 } from "../controllers/request.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { authorize } from "../middleware/authorize.middleware.js";
+import { getRequestActivityController } from "../controllers/request-activity.controller.js";
 
 const router = Router();
 
@@ -23,6 +24,8 @@ router.get(
   authorize("STUDENT"),
   getStudentRequestsController,
 );
+
+router.get("/:id/activity", authenticate, getRequestActivityController);
 
 router.post(
   "/:id/submit",

@@ -76,7 +76,7 @@ export const submitRequest = async (requestId: string, studentId: string) => {
     throw new AppError(404, "Request not found");
   }
 
-  if (request.status !== "DRAFT") {
+  if (request.status !== "DRAFT" && request.status !== "CORRECTION_REQUIRED") {
     throw new AppError(
       400,
       `Request cannot be submitted from ${request.status} status`,
@@ -98,14 +98,84 @@ export const submitRequest = async (requestId: string, studentId: string) => {
   return request;
 };
 
-export const getStudentRequests = async (studentId: string) => {
-  return RequestModel.find({
+type StudentRequestFilters = {
+  search?: string;
+  status?: RequestStatus;
+  priority?: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+  page?: number;
+  limit?: number;
+};
+
+export const getStudentRequests = async (
+  studentId: string,
+  filters: StudentRequestFilters = {},
+) => {
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 10;
+  const skip = (page - 1) * limit;
+
+  const query: {
+    student: string;
+    status?: RequestStatus;
+    priority?: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+    $or?: Array<{
+      title?: { $regex: string; $options: string };
+      description?: { $regex: string; $options: string };
+    }>;
+  } = {
     student: studentId,
-  })
-    .populate("requestType", "name code")
-    .populate("department", "name code")
-    .populate("assignedTo", "firstName lastName email")
-    .sort({ createdAt: -1 });
+  };
+
+  if (filters.status) {
+    query.status = filters.status;
+  }
+
+  if (filters.priority) {
+    query.priority = filters.priority;
+  }
+
+  if (filters.search) {
+    const search = filters.search.trim();
+
+    if (search) {
+      query.$or = [
+        {
+          title: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          description: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+      ];
+    }
+  }
+
+  const [requests, total] = await Promise.all([
+    RequestModel.find(query)
+      .populate("requestType", "name code")
+      .populate("department", "name code")
+      .populate("assignedTo", "firstName lastName email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    RequestModel.countDocuments(query),
+  ]);
+
+  return {
+    requests,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
 
 export const getStudentRequest = async (

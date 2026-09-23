@@ -7,7 +7,7 @@ export const StudentDashboardPage = () => {
 
   const { data, isLoading, isError } = useRequests();
 
-  const requests = data?.data.requests ?? [];
+  const requests = data?.data ?? [];
 
   const total = requests.length;
 

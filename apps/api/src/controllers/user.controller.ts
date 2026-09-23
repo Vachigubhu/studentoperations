@@ -26,9 +26,6 @@ export const getCurrentUser: RequestHandler = async (req, res, next) => {
       throw new AppError(404, "User not found");
     }
 
-    console.log("CURRENT USER:", user);
-    console.log("CURRENT USER DEPARTMENT:", user.department);
-
     res.status(200).json({
       status: "success",
       data: {

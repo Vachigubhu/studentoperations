@@ -54,13 +54,56 @@ export const getStudentRequestsController: RequestHandler = async (
       throw new AppError(401, "Authentication required");
     }
 
-    const requests = await getStudentRequests(req.user.userId);
+    const search =
+      typeof req.query.search === "string"
+        ? req.query.search.trim()
+        : undefined;
+
+    const status =
+      typeof req.query.status === "string" ? req.query.status : undefined;
+
+    const priority =
+      typeof req.query.priority === "string" ? req.query.priority : undefined;
+
+    const page =
+      typeof req.query.page === "string" ? Number(req.query.page) : 1;
+
+    const limit =
+      typeof req.query.limit === "string" ? Number(req.query.limit) : 10;
+
+    if (!Number.isInteger(page) || page < 1) {
+      throw new AppError(400, "Invalid page");
+    }
+
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new AppError(400, "Invalid limit");
+    }
+
+    if (status && !REQUEST_STATUSES.includes(status as RequestStatus)) {
+      throw new AppError(400, "Invalid request status");
+    }
+
+    if (
+      priority &&
+      !REQUEST_PRIORITIES.includes(
+        priority as (typeof REQUEST_PRIORITIES)[number],
+      )
+    ) {
+      throw new AppError(400, "Invalid request priority");
+    }
+
+    const result = await getStudentRequests(req.user.userId, {
+      search,
+      status: status as RequestStatus | undefined,
+      priority: priority as (typeof REQUEST_PRIORITIES)[number] | undefined,
+      page,
+      limit,
+    });
 
     res.status(200).json({
       status: "success",
-      data: {
-        requests,
-      },
+      data: result.requests,
+      pagination: result.pagination,
     });
   } catch (error) {
     next(error);

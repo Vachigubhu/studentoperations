@@ -1,14 +1,12 @@
 import { useParams } from "react-router-dom";
-
+import { CommentsSection } from "../components/requests/CommentSection";
 import {
   useApprovals,
   useAssignStaffRequest,
   useStaffRequest,
   useUpdateRequestStatus,
 } from "../hooks/useStaffOperations";
-
 import { useAuth } from "../context/AuthContext";
-
 import type { RequestStatus } from "../api/requests";
 
 const statusLabels: Record<RequestStatus, string> = {
@@ -260,6 +258,9 @@ export function StaffRequestDetailPage() {
           </p>
         )}
       </section>
+
+      {/**Comments */}
+      <CommentsSection requestId={request._id} />
 
       {/* Approval History */}
       <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">

@@ -1,6 +1,8 @@
 import { Link, useParams } from "react-router-dom";
-
+import { DocumentsSection } from "../components/requests/DocumentsSection";
 import { useRequest, useSubmitRequest } from "../hooks/useRequests";
+import { CommentsSection } from "../components/requests/CommentSection";
+import { RequestActivityTimeline } from "../components/requests/RequestActivityTimeline";
 
 const statusStyles: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-700",
@@ -24,17 +26,6 @@ const getName = (
   }
 
   return value.name;
-};
-
-const formatDate = (value?: string | null) => {
-  if (!value) {
-    return "—";
-  }
-
-  return new Date(value).toLocaleString("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
 };
 
 export const RequestDetailPage = () => {
@@ -150,45 +141,19 @@ export const RequestDetailPage = () => {
         </p>
       </div>
 
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Request Timeline
-        </h2>
+      <RequestActivityTimeline requestId={request._id} />
 
-        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <dt className="text-sm text-gray-500">Created</dt>
+      <DocumentsSection
+        requestId={request._id}
+        canUpload={
+          request.status === "DRAFT" || request.status === "CORRECTION_REQUIRED"
+        }
+        canDelete={
+          request.status === "DRAFT" || request.status === "CORRECTION_REQUIRED"
+        }
+      />
 
-            <dd className="mt-1 text-sm font-medium text-gray-900">
-              {formatDate(request.createdAt)}
-            </dd>
-          </div>
-
-          <div>
-            <dt className="text-sm text-gray-500">Submitted</dt>
-
-            <dd className="mt-1 text-sm font-medium text-gray-900">
-              {formatDate(request.submittedAt)}
-            </dd>
-          </div>
-
-          <div>
-            <dt className="text-sm text-gray-500">Last Updated</dt>
-
-            <dd className="mt-1 text-sm font-medium text-gray-900">
-              {formatDate(request.updatedAt)}
-            </dd>
-          </div>
-
-          <div>
-            <dt className="text-sm text-gray-500">Completed</dt>
-
-            <dd className="mt-1 text-sm font-medium text-gray-900">
-              {formatDate(request.completedAt)}
-            </dd>
-          </div>
-        </dl>
-      </div>
+      <CommentsSection requestId={request._id} />
 
       {canSubmit && (
         <div className="mt-6 flex justify-end">

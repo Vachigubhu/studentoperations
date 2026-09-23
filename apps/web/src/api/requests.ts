@@ -95,11 +95,17 @@ export type CreateRequestResponse = {
   };
 };
 
+export type RequestsPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
 export type RequestsResponse = {
   status: string;
-  data: {
-    requests: StudentRequest[];
-  };
+  data: StudentRequest[];
+  pagination: RequestsPagination;
 };
 
 export type RequestTypesResponse = {
@@ -123,8 +129,18 @@ export type SubmitRequestResponse = {
   };
 };
 
-export const getRequests = async () => {
-  const response = await api.get<RequestsResponse>("/requests");
+export type StudentRequestFilters = {
+  search?: string;
+  status?: RequestStatus;
+  priority?: RequestPriority;
+  page?: number;
+  limit?: number;
+};
+
+export const getRequests = async (filters: StudentRequestFilters = {}) => {
+  const response = await api.get<RequestsResponse>("/requests", {
+    params: filters,
+  });
 
   return response.data;
 };

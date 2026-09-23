@@ -1,85 +1,52 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
+import type { RequestPriority, RequestStatus } from "../api/requests";
 import { useRequests } from "../hooks/useRequests";
-import type {
-  RequestPriority,
-  RequestStatus,
-  StudentRequest,
-} from "../api/requests";
 
-const statusStyles: Record<RequestStatus, string> = {
-  DRAFT: "bg-gray-100 text-gray-700",
-  SUBMITTED: "bg-blue-100 text-blue-700",
-  UNDER_REVIEW: "bg-yellow-100 text-yellow-700",
-  CORRECTION_REQUIRED: "bg-orange-100 text-orange-700",
-  APPROVED: "bg-green-100 text-green-700",
-  REJECTED: "bg-red-100 text-red-700",
-  COMPLETED: "bg-emerald-100 text-emerald-700",
-};
+const statuses: RequestStatus[] = [
+  "DRAFT",
+  "SUBMITTED",
+  "UNDER_REVIEW",
+  "CORRECTION_REQUIRED",
+  "APPROVED",
+  "REJECTED",
+  "COMPLETED",
+];
 
-const priorityStyles: Record<RequestPriority, string> = {
-  LOW: "text-gray-600",
-  NORMAL: "text-blue-600",
-  HIGH: "text-orange-600",
-  URGENT: "text-red-600",
-};
+const priorities: RequestPriority[] = ["LOW", "NORMAL", "HIGH", "URGENT"];
 
-const getRequestTypeName = (request: StudentRequest) => {
-  if (typeof request.requestType === "string") {
-    return request.requestType;
-  }
-
-  return request.requestType.name;
-};
-
-const formatDate = (value: string) => {
-  return new Date(value).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-};
+const formatStatus = (status: RequestStatus) => status.replaceAll("_", " ");
 
 export const RequestsPage = () => {
-  const { data, isLoading, isError, refetch } = useRequests();
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<RequestStatus | "">("");
+  const [priority, setPriority] = useState<RequestPriority | "">("");
+  const [page, setPage] = useState(1);
 
-  if (isLoading) {
-    return (
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <p className="text-gray-600">Loading your requests...</p>
-      </div>
-    );
-  }
+  const filters = {
+    search: search.trim() || undefined,
+    status: status || undefined,
+    priority: priority || undefined,
+    page,
+    limit: 10,
+  };
 
-  if (isError) {
-    return (
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-          <h1 className="text-lg font-semibold text-red-800">
-            Unable to load requests
-          </h1>
+  const requestsQuery = useRequests(filters);
 
-          <p className="mt-2 text-sm text-red-700">
-            Something went wrong while loading your requests.
-          </p>
+  const requests = requestsQuery.data?.data ?? [];
+  const pagination = requestsQuery.data?.pagination;
 
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white"
-          >
-            Try again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const requests = data?.data.requests ?? [];
+  const resetFilters = () => {
+    setSearch("");
+    setStatus("");
+    setPriority("");
+    setPage(1);
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-sm font-medium text-gray-500">StudentOps</p>
 
@@ -88,106 +55,207 @@ export const RequestsPage = () => {
           </h1>
 
           <p className="mt-2 text-gray-600">
-            View and manage your student service requests.
+            Track and manage your submitted requests.
           </p>
         </div>
 
         <Link
           to="/requests/new"
-          className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-700"
+          className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
         >
           New Request
         </Link>
       </div>
 
-      {requests.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-          <h2 className="text-lg font-semibold text-gray-900">
-            No requests yet
-          </h2>
+      {/* Filters */}
+      <div className="mt-8 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="grid gap-4 md:grid-cols-4">
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+            placeholder="Search requests..."
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
+          />
 
-          <p className="mt-2 text-sm text-gray-600">
-            Create your first student service request.
-          </p>
-
-          <Link
-            to="/requests/new"
-            className="mt-5 inline-flex rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+          <select
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value as RequestStatus | "");
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
           >
-            Create Request
-          </Link>
+            <option value="">All statuses</option>
+
+            {statuses.map((item) => (
+              <option key={item} value={item}>
+                {formatStatus(item)}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={priority}
+            onChange={(event) => {
+              setPriority(event.target.value as RequestPriority | "");
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
+          >
+            <option value="">All priorities</option>
+
+            {priorities.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Reset Filters
+          </button>
         </div>
-      ) : (
-        <div className="mt-8 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      </div>
+
+      {/* Results */}
+      <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        {requestsQuery.isLoading && (
+          <div className="p-8 text-center text-sm text-gray-500">
+            Loading requests...
+          </div>
+        )}
+
+        {requestsQuery.isError && (
+          <div className="p-8 text-center text-sm text-red-600">
+            Failed to load requests.
+          </div>
+        )}
+
+        {!requestsQuery.isLoading &&
+          !requestsQuery.isError &&
+          requests.length === 0 && (
+            <div className="p-10 text-center">
+              <p className="font-medium text-gray-900">No requests found</p>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Try changing your filters or create a new request.
+              </p>
+            </div>
+          )}
+
+        {requests.length > 0 && (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Request
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Department
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Status
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Priority
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Created
                   </th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100">
-                {requests.map((request) => (
-                  <tr key={request._id} className="transition hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <Link
-                        to={`/requests/${request._id}`}
-                        className="font-medium text-gray-900 hover:underline"
-                      >
-                        {request.title}
-                      </Link>
+              <tbody className="divide-y divide-gray-200">
+                {requests.map((request) => {
+                  const requestType =
+                    typeof request.requestType === "string"
+                      ? request.requestType
+                      : request.requestType.name;
 
-                      <p className="mt-1 text-sm text-gray-500">
-                        {getRequestTypeName(request)}
-                      </p>
-                    </td>
+                  const department =
+                    typeof request.department === "string"
+                      ? request.department
+                      : request.department.name;
 
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {typeof request.department === "string"
-                        ? request.department
-                        : request.department.name}
-                    </td>
+                  return (
+                    <tr key={request._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <Link
+                          to={`/requests/${request._id}`}
+                          className="font-medium text-gray-900 hover:underline"
+                        >
+                          {request.title}
+                        </Link>
 
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[request.status]}`}
-                      >
-                        {request.status.replaceAll("_", " ")}
-                      </span>
-                    </td>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {requestType}
+                        </p>
+                      </td>
 
-                    <td
-                      className={`px-6 py-4 text-sm font-semibold ${priorityStyles[request.priority]}`}
-                    >
-                      {request.priority}
-                    </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {department}
+                      </td>
 
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {formatDate(request.createdAt)}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-6 py-4">
+                        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                          {formatStatus(request.status)}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {request.priority}
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {new Date(request.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            Page {pagination.page} of {pagination.totalPages}
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={pagination.page <= 1}
+              onClick={() => setPage((current) => current - 1)}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Previous
+            </button>
+
+            <button
+              type="button"
+              disabled={pagination.page >= pagination.totalPages}
+              onClick={() => setPage((current) => current + 1)}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}

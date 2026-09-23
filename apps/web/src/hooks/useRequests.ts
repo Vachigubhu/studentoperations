@@ -7,22 +7,24 @@ import {
   getRequests,
   submitRequest,
   type CreateRequestInput,
+  type StudentRequestFilters,
 } from "../api/requests";
 
 export const requestKeys = {
   all: ["requests"] as const,
 
-  list: () => [...requestKeys.all, "list"] as const,
+  list: (filters: StudentRequestFilters = {}) =>
+    [...requestKeys.all, "list", filters] as const,
 
   detail: (id: string) => [...requestKeys.all, "detail", id] as const,
 
   types: ["request-types"] as const,
 };
 
-export const useRequests = () => {
+export const useRequests = (filters: StudentRequestFilters = {}) => {
   return useQuery({
-    queryKey: requestKeys.list(),
-    queryFn: getRequests,
+    queryKey: requestKeys.list(filters),
+    queryFn: () => getRequests(filters),
   });
 };
 
