@@ -20,7 +20,7 @@ router.use("/health", healthRoutes);
 router.use("/users", userRoutes);
 router.use("/role-tests", roleTestRoutes);
 router.use("/requests", requestRoutes);
-router.use(documentRoutes);
+router.use("/documents", documentRoutes);
 router.use(aprovalRoutes);
 router.use(commentRoutes);
 router.use(notificationRoutes);

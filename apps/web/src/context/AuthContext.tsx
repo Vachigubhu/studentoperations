@@ -10,13 +10,14 @@ import type { User } from "../types/auth";
 import { authStorage } from "../utils/auth-storage";
 import { onLogoutEvent } from "../utils/auth-events";
 import { connectSocket, disconnectSocket } from "../socket/socket";
+import { api } from "../api/client";
 
 type AuthContextValue = {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -63,20 +64,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     const response = await loginRequest({ email, password });
 
-    authStorage.setTokens(
-      response.data.accessToken,
-      response.data.refreshToken,
-    );
+    authStorage.setAccessToken(response.data.accessToken);
 
     setUser(response.data.user);
 
     connectSocket();
   };
 
-  const logout = () => {
-    disconnectSocket();
-    authStorage.clear();
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } finally {
+      disconnectSocket();
+      authStorage.clear();
+      setUser(null);
+    }
   };
 
   return (

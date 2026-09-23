@@ -12,6 +12,8 @@ import {
   updateUserStatusSchema,
 } from "../validators/admin-user.validator.js";
 
+import { AppError } from "../utils/AppError.js";
+
 export const listUsersController: RequestHandler = async (req, res, next) => {
   try {
     const query = listUsersSchema.parse(req.query);
@@ -30,9 +32,13 @@ export const updateUserRoleController: RequestHandler<{ id: string }> = async (
   next,
 ) => {
   try {
+    if (!req.user) {
+      throw new AppError(401, "Authentication required");
+    }
+
     const { role } = updateUserRoleSchema.parse(req.body);
 
-    const user = await updateUserRole(req.params.id, role);
+    const user = await updateUserRole(req.params.id, role, req.user.role);
 
     res.status(200).json({
       data: user,

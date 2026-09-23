@@ -6,6 +6,7 @@ import {
   getStudentDocuments,
   uploadDocument,
 } from "../services/document.service.js";
+import { getDocumentFile } from "../services/document.service.js";
 
 export const uploadDocumentController: RequestHandler<{ id: string }> = async (
   req,
@@ -75,6 +76,27 @@ export const deleteDocumentController: RequestHandler<{ id: string }> = async (
       status: "success",
       message: "Document deleted successfully",
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const downloadDocumentController: RequestHandler<{
+  id: string;
+}> = async (req, res, next) => {
+  try {
+    const user = req.user!;
+
+    const { document, stream } = await getDocumentFile(req.params.id, user);
+
+    res.setHeader("Content-Type", document.mimeType);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${encodeURIComponent(document.originalName)}"`,
+    );
+
+    stream.on("error", next);
+    stream.pipe(res);
   } catch (error) {
     next(error);
   }

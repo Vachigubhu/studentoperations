@@ -2,6 +2,7 @@ import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
 import mongoose from "mongoose";
+import multer from "multer";
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   console.error(error);
@@ -16,7 +17,22 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
         code: issue.code,
       })),
     });
+    return;
+  }
 
+  if (error instanceof multer.MulterError) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      res.status(413).json({
+        status: "error",
+        message: "File is too large. Maximum file size is 5 MB.",
+      });
+      return;
+    }
+
+    res.status(400).json({
+      status: "error",
+      message: "File upload failed.",
+    });
     return;
   }
 
@@ -25,7 +41,6 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
       status: "error",
       message: error.message,
     });
-
     return;
   }
 
@@ -34,7 +49,6 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
       status: "error",
       message: "Invalid resource ID",
     });
-
     return;
   }
 

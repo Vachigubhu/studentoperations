@@ -22,6 +22,7 @@ export const AdminUsersPage = () => {
   const [role, setRole] = useState<UserRole | "">("");
   const [isActive, setIsActive] = useState<"" | "true" | "false">("");
   const [page, setPage] = useState(1);
+  const [roleError, setRoleError] = useState("");
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -49,10 +50,34 @@ export const AdminUsersPage = () => {
   const pagination = data?.pagination;
 
   const handleRoleChange = (userId: string, newRole: UserRole) => {
-    updateRole.mutate({
-      userId,
-      role: newRole,
-    });
+    setRoleError("");
+
+    updateRole.mutate(
+      {
+        userId,
+        role: newRole,
+      },
+      {
+        onError: (error) => {
+          const message =
+            (
+              error as {
+                response?: {
+                  data?: {
+                    message?: string;
+                  };
+                };
+              }
+            ).response?.data?.message ?? "Unable to update the user's role.";
+
+          setRoleError(message);
+
+          window.setTimeout(() => {
+            setRoleError("");
+          }, 4000);
+        },
+      },
+    );
   };
 
   const handleStatusToggle = (userId: string, currentStatus: boolean) => {
@@ -72,6 +97,26 @@ export const AdminUsersPage = () => {
 
   return (
     <div className="space-y-6">
+      {roleError && (
+        <div className="fixed right-6 top-6 z-50 w-full max-w-md rounded-xl border border-red-300 bg-red-50 px-5 py-4 shadow-lg">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+              !
+            </div>
+
+            <div>
+              <div className="font-semibold text-red-800">
+                Unable to change role
+              </div>
+
+              <div className="mt-1 text-sm leading-5 text-red-700">
+                {roleError}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
 

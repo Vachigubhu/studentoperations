@@ -5,6 +5,7 @@ import { emitLogoutEvent } from "../utils/auth-events";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:5000/api/v1",
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
@@ -20,30 +21,24 @@ api.interceptors.request.use((config) => {
 let refreshPromise: Promise<string | null> | null = null;
 
 const refreshAccessToken = async () => {
-  const refreshToken = authStorage.getRefreshToken();
-
-  if (!refreshToken) {
-    return null;
-  }
-
   try {
     const response = await axios.post<{
       data: {
         accessToken: string;
-        refreshToken: string;
       };
     }>(
       `${
         import.meta.env.VITE_API_URL ?? "http://localhost:5000/api/v1"
       }/auth/refresh`,
+      {},
       {
-        refreshToken,
+        withCredentials: true,
       },
     );
 
-    const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+    const { accessToken } = response.data.data;
 
-    authStorage.setTokens(accessToken, newRefreshToken);
+    authStorage.setAccessToken(accessToken);
 
     return accessToken;
   } catch {
@@ -54,7 +49,6 @@ const refreshAccessToken = async () => {
     return null;
   }
 };
-
 api.interceptors.response.use(
   (response) => response,
 

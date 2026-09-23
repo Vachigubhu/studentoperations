@@ -1,7 +1,7 @@
 import { RequestModel } from "../models/Request.js";
 import { AppError } from "./AppError.js";
 
-type RequestAccessUser = {
+export type RequestAccessUser = {
   userId: string;
   role: "STUDENT" | "STAFF" | "MANAGER" | "ADMIN" | "SUPER_ADMIN";
   departmentId?: string;

@@ -15,6 +15,7 @@ export const env = {
   port: Number(process.env.PORT ?? 5000),
   mongodbUrl: requiredEnv("MONGODB_URL"),
   webOrigin: requiredEnv("WEB_ORIGIN"),
+  cookieSecure: process.env.COOKIE_SECURE === "true",
 
   jwt: {
     accessSecret: requiredEnv("JWT_ACCESS_SECRET"),

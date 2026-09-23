@@ -62,7 +62,18 @@ export const listUsers = async ({
   };
 };
 
-export const updateUserRole = async (userId: string, role: UserRole) => {
+export const updateUserRole = async (
+  userId: string,
+  role: UserRole,
+  currentUserRole: UserRole,
+) => {
+  if (role === "SUPER_ADMIN" && currentUserRole !== "SUPER_ADMIN") {
+    throw new AppError(
+      403,
+      "Only a SUPER_ADMIN can assign the SUPER_ADMIN role",
+    );
+  }
+
   const user = await UserModel.findByIdAndUpdate(
     userId,
     { role },

@@ -5,6 +5,13 @@ import { AppError } from "../utils/AppError.js";
 import { deleteFile, saveFile } from "../utils/file-storage.js";
 import path from "node:path";
 import { emitAuditEvent } from "../events/audit.js";
+import { fileTypeFromBuffer } from "file-type";
+import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
+import {
+  getAccessibleRequest,
+  type RequestAccessUser,
+} from "../utils/request-access.js";
 
 export const uploadDocument = async (
   requestId: string,
@@ -30,6 +37,22 @@ export const uploadDocument = async (
     : "";
 
   const storageKey = `${crypto.randomUUID()}${extension}`;
+
+  const detectedType = await fileTypeFromBuffer(file.buffer);
+
+  if (!detectedType) {
+    throw new AppError(400, "Unable to determine file type");
+  }
+
+  const allowedTypes = new Set(["application/pdf", "image/jpeg", "image/png"]);
+
+  if (!allowedTypes.has(detectedType.mime)) {
+    throw new AppError(400, "Invalid file type");
+  }
+
+  if (detectedType.mime !== file.mimetype) {
+    throw new AppError(400, "File type does not match its declared MIME type");
+  }
 
   try {
     await saveFile(file, storageKey);
@@ -113,4 +136,30 @@ export const deleteDocument = async (documentId: string, userId: string) => {
   );
 
   return document;
+};
+
+export const getDocumentFile = async (
+  documentId: string,
+  user: RequestAccessUser,
+) => {
+  const document = await DocumentModel.findById(documentId);
+
+  if (!document) {
+    throw new AppError(404, "Document not found");
+  }
+
+  await getAccessibleRequest(document.request.toString(), user);
+
+  const filePath = path.resolve("uploads", document.storageKey);
+
+  try {
+    await stat(filePath);
+  } catch {
+    throw new AppError(404, "Document file not found");
+  }
+
+  return {
+    document,
+    stream: createReadStream(filePath),
+  };
 };
