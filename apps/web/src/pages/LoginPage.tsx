@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../context/AuthContext";
@@ -6,7 +7,7 @@ import { loginSchema, type LoginFormData } from "../validators/auth.validator";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-
+  const [loginError, setLoginError] = useState("");
   const { login } = useAuth();
 
   const {
@@ -24,6 +25,7 @@ export const LoginPage = () => {
       navigate("/dashboard", { replace: true });
     } catch {
       // API error handling comes next.
+      setLoginError("Invalid email or password.");
     }
   };
 
@@ -70,6 +72,12 @@ export const LoginPage = () => {
             </p>
           )}
         </div>
+
+        {loginError && (
+          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            {loginError}
+          </p>
+        )}
 
         <button
           type="submit"
