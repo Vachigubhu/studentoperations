@@ -14,6 +14,17 @@ jobs:
   quality:
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: mongo:8
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,6 +48,16 @@ jobs:
 
       - name: Backend tests
         run: pnpm --filter api test
+        env:
+          NODE_ENV: test
+          PORT: 5000
+          MONGODB_URL: mongodb://127.0.0.1:27017/studentops
+          JWT_ACCESS_SECRET: ci-test-access-secret
+          JWT_REFRESH_SECRET: ci-test-refresh-secret
+          JWT_ACCESS_EXPIRES_IN: 15m
+          JWT_REFRESH_EXPIRES_IN: 7d
+          WEB_ORIGIN: http://localhost:5173
+          COOKIE_SECURE: "false"
 
       - name: Frontend tests
         run: pnpm --filter web test
