@@ -347,10 +347,12 @@ describe("MessagesPage", () => {
     mockUseUserDirectory.mockReturnValue({
       data: [
         {
-          _id: "user-3",
+          id: "user-3",
           firstName: "Jane",
           lastName: "Smith",
           email: "jane@example.com",
+          role: "STUDENT",
+          department: null,
         },
       ],
       isLoading: false,
@@ -385,6 +387,7 @@ describe("MessagesPage", () => {
 
   it("creates a new conversation", async () => {
     const user = userEvent.setup();
+
     const createConversation = vi.fn().mockResolvedValue({
       _id: "conversation-new",
       subject: "Admission Question",
@@ -406,10 +409,12 @@ describe("MessagesPage", () => {
     mockUseUserDirectory.mockReturnValue({
       data: [
         {
-          _id: "user-3",
+          id: "user-3",
           firstName: "Jane",
           lastName: "Smith",
           email: "jane@example.com",
+          role: "STUDENT",
+          department: null,
         },
       ],
       isLoading: false,
