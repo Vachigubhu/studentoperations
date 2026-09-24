@@ -92,7 +92,6 @@ export const MessagesPage = () => {
     useMessages(selectedId);
 
   const sendMessageMutation = useSendMessage();
-
   const markReadMutation = useMarkMessagesAsRead();
 
   useEffect(() => {
@@ -100,8 +99,7 @@ export const MessagesPage = () => {
       markReadMutation.mutate(selectedId);
     }
 
-    // We intentionally mark when the selected
-    // conversation changes.
+    // We intentionally mark when the selected conversation changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
 
@@ -142,7 +140,7 @@ export const MessagesPage = () => {
     }
 
     const conversation = await createConversation.mutateAsync({
-      participantId: selectedParticipant._id,
+      participantId: selectedParticipant.id,
       subject: subject.trim(),
     });
 
@@ -210,7 +208,6 @@ export const MessagesPage = () => {
         letterSpacing: "normal",
       }}
     >
-      {/* Page Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
@@ -230,9 +227,7 @@ export const MessagesPage = () => {
         </button>
       </div>
 
-      {/* Main Messaging Interface */}
       <div className="grid min-h-162.5 overflow-hidden rounded-xl border bg-white shadow-sm lg:grid-cols-[320px_1fr]">
-        {/* Conversations */}
         <aside className="border-b lg:border-b-0 lg:border-r">
           <div className="border-b px-5 py-4">
             <h2 className="font-semibold text-gray-900">Conversations</h2>
@@ -256,7 +251,6 @@ export const MessagesPage = () => {
           )}
         </aside>
 
-        {/* Message Panel */}
         <div className="flex min-h-162.5 flex-col">
           {!selectedConversation ? (
             <div className="flex flex-1 items-center justify-center p-8 text-center">
@@ -272,7 +266,6 @@ export const MessagesPage = () => {
             </div>
           ) : (
             <>
-              {/* Conversation Header */}
               <header className="border-b px-6 py-4">
                 <h2 className="font-semibold text-gray-900">
                   {selectedConversation.subject}
@@ -285,7 +278,6 @@ export const MessagesPage = () => {
                 </p>
               </header>
 
-              {/* Messages */}
               <div className="flex-1 space-y-4 overflow-y-auto p-6">
                 {messagesLoading ? (
                   <p className="text-center text-sm text-gray-500">
@@ -344,7 +336,6 @@ export const MessagesPage = () => {
                 )}
               </div>
 
-              {/* Message Composer */}
               <form onSubmit={handleSend} className="border-t p-4">
                 <div className="flex gap-3">
                   <textarea
@@ -370,7 +361,6 @@ export const MessagesPage = () => {
         </div>
       </div>
 
-      {/* New Conversation Modal */}
       {showNewConversation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
@@ -386,7 +376,6 @@ export const MessagesPage = () => {
 
             <form onSubmit={handleCreateConversation}>
               <div className="space-y-4">
-                {/* Participant */}
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     Participant
@@ -415,7 +404,7 @@ export const MessagesPage = () => {
                       <div className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-gray-200">
                         {directoryUsers.map((directoryUser) => (
                           <button
-                            key={directoryUser._id}
+                            key={directoryUser.id}
                             type="button"
                             onClick={() => {
                               setSelectedParticipant(directoryUser);
@@ -461,7 +450,6 @@ export const MessagesPage = () => {
                   )}
                 </div>
 
-                {/* Subject */}
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     Subject
@@ -478,7 +466,6 @@ export const MessagesPage = () => {
                 </div>
               </div>
 
-              {/* Modal Actions */}
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
