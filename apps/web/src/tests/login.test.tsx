@@ -85,7 +85,15 @@ describe("LoginPage", () => {
 
     expect(mockLogin).not.toHaveBeenCalled();
 
-    expect(await screen.findByText(/required/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText("Invalid email address"),
+    ).toBeInTheDocument();
+
+    expect(
+      await screen.findByText(
+        /Too small: expected string to have >=1 characters/i,
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows an error when login fails", async () => {

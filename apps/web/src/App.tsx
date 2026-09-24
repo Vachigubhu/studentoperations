@@ -21,6 +21,7 @@ import { NotificationsPage } from "./pages/NotificationsPage";
 import { MessagesPage } from "./pages/MessagePage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { StudentDashboardPage } from "./pages/StudentDashboardPage";
+import { RegisterPage } from "./pages/RegisterPage";
 
 const HomeRedirect = () => {
   const { user, isLoading } = useAuth();
@@ -81,6 +82,8 @@ function App() {
         <Route path="/" element={<HomeRedirect />} />
 
         <Route path="/login" element={<LoginPage />} />
+
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Protected application routes */}
         <Route element={<AppLayout />}>

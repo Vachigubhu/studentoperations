@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,11 +20,12 @@ export const LoginPage = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      setLoginError("");
+
       await login(data.email, data.password);
 
       navigate("/dashboard", { replace: true });
     } catch {
-      // API error handling comes next.
       setLoginError("Invalid email or password.");
     }
   };
@@ -94,6 +95,16 @@ export const LoginPage = () => {
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>
+
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="font-medium text-gray-900 hover:underline"
+          >
+            Create an account
+          </Link>
+        </p>
       </form>
     </main>
   );
