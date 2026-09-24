@@ -40,12 +40,16 @@ export const LoginPage = () => {
         </h1>
 
         <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
             Email
           </label>
 
           <input
             {...register("email")}
+            id="email"
             type="email"
             className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2"
           />
@@ -56,12 +60,16 @@ export const LoginPage = () => {
         </div>
 
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
             Password
           </label>
 
           <input
             {...register("password")}
+            id="password"
             type="password"
             className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2"
           />
