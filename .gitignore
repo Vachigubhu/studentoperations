@@ -1,9 +1,10 @@
 node_modules/
 dist/
 .env
+.env.docker
 .env.*
 !.env.example
-
+!.env.docker.example
 .vscode/
 .idea/
 

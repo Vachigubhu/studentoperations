@@ -3,10 +3,58 @@ services:
     image: mongo:8
     container_name: studentops-mongodb
     restart: unless-stopped
+    command: mongod --replSet rs0 --bind_ip_all
     environment:
       MONGO_INITDB_DATABASE: studentops
     volumes:
       - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
+  mongo-init:
+    image: mongo:8
+    container_name: studentops-mongo-init
+    restart: "no"
+    depends_on:
+      - mongodb
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo "Waiting for MongoDB..."
+
+        until mongosh mongodb://mongodb:27017/admin --quiet --eval "db.adminCommand({ ping: 1 })" >/dev/null 2>&1; do
+          sleep 2
+        done
+
+        echo "MongoDB is available."
+
+        echo "Initializing replica set..."
+
+        mongosh mongodb://mongodb:27017/admin --quiet --eval '
+          try {
+            rs.status();
+            print("Replica set already initialized.");
+          } catch (e) {
+            rs.initiate({
+              _id: "rs0",
+              members: [
+                {
+                  _id: 0,
+                  host: "mongodb:27017"
+                }
+              ]
+            });
+          }
+        '
+
+        echo "Waiting for PRIMARY..."
+
+        until mongosh mongodb://mongodb:27017/admin --quiet --eval "rs.status().members[0].stateStr" | grep -q PRIMARY; do
+          sleep 2
+        done
+
+        echo "MongoDB replica set is PRIMARY."
 
   api:
     build:
@@ -15,7 +63,8 @@ services:
     container_name: studentops-api
     restart: unless-stopped
     depends_on:
-      - mongodb
+      mongo-init:
+        condition: service_completed_successfully
     env_file:
       - .env.docker
     ports:
