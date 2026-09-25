@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - main
+
   pull_request:
     branches:
       - master
@@ -20,60 +21,174 @@ jobs:
         ports:
           - 27017:27017
         options: >-
+          --replSet rs0
+          --bind_ip_all
           --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
 
     steps:
+      # --------------------------------------------------
+      # 1. Checkout
+      # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # --------------------------------------------------
+      # 2. Setup pnpm
+      # --------------------------------------------------
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 11.19.0
 
+      # --------------------------------------------------
+      # 3. Setup Node.js
+      # --------------------------------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
+      # --------------------------------------------------
+      # 4. Install dependencies
+      # --------------------------------------------------
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # --------------------------------------------------
+      # 5. Initialize MongoDB replica set
+      # --------------------------------------------------
+      - name: Initialize MongoDB replica set
+        shell: bash
+        run: |
+          set -e
+
+          MONGO_CONTAINER=$(docker ps --filter "ancestor=mongo:8" --format "{{.ID}}" | head -n 1)
+
+          if [ -z "$MONGO_CONTAINER" ]; then
+            echo "MongoDB container was not found."
+            docker ps -a
+            exit 1
+          fi
+
+          echo "MongoDB container: $MONGO_CONTAINER"
+
+          echo "Waiting for MongoDB to become available..."
+
+          for i in {1..30}; do
+            if docker exec "$MONGO_CONTAINER" \
+              mongosh --quiet --eval "db.adminCommand({ ping: 1 })" >/dev/null 2>&1; then
+              echo "MongoDB is ready."
+              break
+            fi
+
+            echo "MongoDB is not ready yet..."
+            sleep 2
+          done
+
+          echo "Initializing replica set..."
+
+          docker exec "$MONGO_CONTAINER" \
+            mongosh --quiet --eval '
+              try {
+                rs.status();
+                print("Replica set already initialized.");
+              } catch (e) {
+                print("Initializing replica set...");
+                rs.initiate({
+                  _id: "rs0",
+                  members: [
+                    {
+                      _id: 0,
+                      host: "localhost:27017"
+                    }
+                  ]
+                });
+              }
+            '
+
+          echo "Waiting for PRIMARY state..."
+
+          for i in {1..30}; do
+            STATE=$(docker exec "$MONGO_CONTAINER" \
+              mongosh --quiet --eval "rs.status().members[0].stateStr" 2>/dev/null || true)
+
+            echo "Replica set state: $STATE"
+
+            if [ "$STATE" = "PRIMARY" ]; then
+              echo "MongoDB replica set is PRIMARY."
+              break
+            fi
+
+            sleep 2
+          done
+
+          FINAL_STATE=$(docker exec "$MONGO_CONTAINER" \
+            mongosh --quiet --eval "rs.status().members[0].stateStr")
+
+          if [ "$FINAL_STATE" != "PRIMARY" ]; then
+            echo "MongoDB replica set failed to become PRIMARY."
+            docker logs "$MONGO_CONTAINER"
+            exit 1
+          fi
+
+          echo "MongoDB replica set initialization complete."
+
+      # --------------------------------------------------
+      # 6. Typecheck
+      # --------------------------------------------------
       - name: Typecheck
         run: pnpm typecheck
 
+      # --------------------------------------------------
+      # 7. Seed test database
+      # --------------------------------------------------
       - name: Seed test database
         run: pnpm --filter api exec tsx src/scripts/seed-request-data.ts
         env:
           NODE_ENV: test
           PORT: 5000
-          MONGODB_URL: mongodb://127.0.0.1:27017/studentops
+
+          MONGODB_URL: mongodb://127.0.0.1:27017/studentops?replicaSet=rs0
+
           JWT_ACCESS_SECRET: ci-test-access-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
           JWT_ACCESS_EXPIRES_IN: 15m
           JWT_REFRESH_EXPIRES_IN: 7d
+
           WEB_ORIGIN: http://localhost:5173
           COOKIE_SECURE: "false"
 
+      # --------------------------------------------------
+      # 8. Backend tests
+      # --------------------------------------------------
       - name: Backend tests
         run: pnpm --filter api test
         env:
           NODE_ENV: test
           PORT: 5000
-          MONGODB_URL: mongodb://127.0.0.1:27017/studentops
+
+          MONGODB_URL: mongodb://127.0.0.1:27017/studentops?replicaSet=rs0
+
           JWT_ACCESS_SECRET: ci-test-access-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
           JWT_ACCESS_EXPIRES_IN: 15m
           JWT_REFRESH_EXPIRES_IN: 7d
+
           WEB_ORIGIN: http://localhost:5173
           COOKIE_SECURE: "false"
 
+      # --------------------------------------------------
+      # 9. Frontend tests
+      # --------------------------------------------------
       - name: Frontend tests
         run: pnpm --filter web test
 
+      # --------------------------------------------------
+      # 10. Production build
+      # --------------------------------------------------
       - name: Production build
         run: pnpm build
