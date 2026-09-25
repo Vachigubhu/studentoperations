@@ -29,7 +29,7 @@ jobs:
 
     steps:
       # --------------------------------------------------
-      # 1. Checkout
+      # 1. Checkout repository
       # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -58,34 +58,79 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # --------------------------------------------------
-      # 5. Initialize MongoDB replica set
+      # 5. Find MongoDB service container
       # --------------------------------------------------
-      - name: Initialize MongoDB replica set
+      - name: Find MongoDB container
+        id: mongodb
         shell: bash
+        run: |
+          set -e
+
+          MONGO_CONTAINER=$(docker ps \
+            --filter "ancestor=mongo:8" \
+            --format "{{.ID}}" \
+            | head -n 1)
+
+          if [ -z "$MONGO_CONTAINER" ]; then
+            echo "MongoDB container was not found."
+            docker ps -a
+            exit 1
+          fi
+
+          echo "MongoDB container: $MONGO_CONTAINER"
+
+          echo "container=$MONGO_CONTAINER" >> "$GITHUB_OUTPUT"
+
+      # --------------------------------------------------
+      # 6. Wait for MongoDB
+      # --------------------------------------------------
+      - name: Wait for MongoDB
+        shell: bash
+        env:
+          MONGO_CONTAINER: ${{ steps.mongodb.outputs.container }}
         run: |
           set -e
 
           echo "Waiting for MongoDB..."
 
           for i in {1..30}; do
-            if mongosh mongodb://127.0.0.1:27017/admin \
-              --quiet \
-              --eval "db.adminCommand({ ping: 1 })" >/dev/null 2>&1; then
+            if docker exec "$MONGO_CONTAINER" \
+              mongosh --quiet \
+              --eval "db.adminCommand({ ping: 1 })" \
+              >/dev/null 2>&1; then
+
               echo "MongoDB is ready."
-              break
+              exit 0
             fi
 
             echo "MongoDB is not ready yet..."
             sleep 2
           done
 
-          echo "Initializing replica set..."
+          echo "MongoDB failed to become ready."
 
-          mongosh mongodb://127.0.0.1:27017/admin \
-            --quiet \
+          docker logs "$MONGO_CONTAINER"
+
+          exit 1
+
+      # --------------------------------------------------
+      # 7. Initialize MongoDB replica set
+      # --------------------------------------------------
+      - name: Initialize MongoDB replica set
+        shell: bash
+        env:
+          MONGO_CONTAINER: ${{ steps.mongodb.outputs.container }}
+        run: |
+          set -e
+
+          echo "Initializing MongoDB replica set..."
+
+          docker exec "$MONGO_CONTAINER" \
+            mongosh --quiet \
             --eval '
               try {
                 rs.status();
+
                 print("Replica set already initialized.");
               } catch (e) {
                 print("Initializing replica set...");
@@ -105,77 +150,80 @@ jobs:
           echo "Waiting for PRIMARY..."
 
           for i in {1..30}; do
-            STATE=$(mongosh mongodb://127.0.0.1:27017/admin \
-              --quiet \
-              --eval "rs.status().members[0].stateStr" 2>/dev/null || true)
+            STATE=$(docker exec "$MONGO_CONTAINER" \
+              mongosh --quiet \
+              --eval "rs.status().members[0].stateStr" \
+              2>/dev/null || true)
 
             echo "Replica set state: $STATE"
 
             if [ "$STATE" = "PRIMARY" ]; then
               echo "MongoDB replica set is PRIMARY."
-              break
+              exit 0
             fi
 
             sleep 2
           done
 
-          FINAL_STATE=$(mongosh mongodb://127.0.0.1:27017/admin \
-            --quiet \
-            --eval "rs.status().members[0].stateStr")
+          echo "MongoDB replica set failed to become PRIMARY."
 
-          if [ "$FINAL_STATE" != "PRIMARY" ]; then
-            echo "MongoDB replica set failed to become PRIMARY."
-            exit 1
-          fi
+          docker logs "$MONGO_CONTAINER"
 
-          echo "MongoDB replica set is ready."
+          exit 1
 
       # --------------------------------------------------
-      # 6. Typecheck
+      # 8. Typecheck
       # --------------------------------------------------
       - name: Typecheck
         run: pnpm typecheck
 
       # --------------------------------------------------
-      # 7. Seed test database
+      # 9. Seed test database
       # --------------------------------------------------
       - name: Seed test database
         run: pnpm --filter api exec tsx src/scripts/seed-request-data.ts
         env:
           NODE_ENV: test
           PORT: 5000
+
           MONGODB_URL: mongodb://127.0.0.1:27017/studentops?replicaSet=rs0
+
           JWT_ACCESS_SECRET: ci-test-access-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
           JWT_ACCESS_EXPIRES_IN: 15m
           JWT_REFRESH_EXPIRES_IN: 7d
+
           WEB_ORIGIN: http://localhost:5173
           COOKIE_SECURE: "false"
 
       # --------------------------------------------------
-      # 8. Backend tests
+      # 10. Backend tests
       # --------------------------------------------------
       - name: Backend tests
         run: pnpm --filter api test
         env:
           NODE_ENV: test
           PORT: 5000
+
           MONGODB_URL: mongodb://127.0.0.1:27017/studentops?replicaSet=rs0
+
           JWT_ACCESS_SECRET: ci-test-access-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
           JWT_ACCESS_EXPIRES_IN: 15m
           JWT_REFRESH_EXPIRES_IN: 7d
+
           WEB_ORIGIN: http://localhost:5173
           COOKIE_SECURE: "false"
 
       # --------------------------------------------------
-      # 9. Frontend tests
+      # 11. Frontend tests
       # --------------------------------------------------
       - name: Frontend tests
         run: pnpm --filter web test
 
       # --------------------------------------------------
-      # 10. Production build
+      # 12. Production build
       # --------------------------------------------------
+      - name: Production build
       - name: Production build
         run: pnpm build
