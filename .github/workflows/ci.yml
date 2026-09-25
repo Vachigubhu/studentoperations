@@ -28,38 +28,23 @@ jobs:
           --health-retries 10
 
     steps:
-      # --------------------------------------------------
-      # 1. Checkout repository
-      # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --------------------------------------------------
-      # 2. Setup pnpm
-      # --------------------------------------------------
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 11.19.0
 
-      # --------------------------------------------------
-      # 3. Setup Node.js
-      # --------------------------------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
-      # --------------------------------------------------
-      # 4. Install dependencies
-      # --------------------------------------------------
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # --------------------------------------------------
-      # 5. Find MongoDB service container
-      # --------------------------------------------------
       - name: Find MongoDB container
         id: mongodb
         shell: bash
@@ -81,9 +66,6 @@ jobs:
 
           echo "container=$MONGO_CONTAINER" >> "$GITHUB_OUTPUT"
 
-      # --------------------------------------------------
-      # 6. Wait for MongoDB
-      # --------------------------------------------------
       - name: Wait for MongoDB
         shell: bash
         env:
@@ -113,9 +95,6 @@ jobs:
 
           exit 1
 
-      # --------------------------------------------------
-      # 7. Initialize MongoDB replica set
-      # --------------------------------------------------
       - name: Initialize MongoDB replica set
         shell: bash
         env:
@@ -130,7 +109,6 @@ jobs:
             --eval '
               try {
                 rs.status();
-
                 print("Replica set already initialized.");
               } catch (e) {
                 print("Initializing replica set...");
@@ -171,59 +149,37 @@ jobs:
 
           exit 1
 
-      # --------------------------------------------------
-      # 8. Typecheck
-      # --------------------------------------------------
       - name: Typecheck
         run: pnpm typecheck
 
-      # --------------------------------------------------
-      # 9. Seed test database
-      # --------------------------------------------------
       - name: Seed test database
         run: pnpm --filter api exec tsx src/scripts/seed-request-data.ts
         env:
           NODE_ENV: test
           PORT: 5000
-
           MONGODB_URL: mongodb://127.0.0.1:27017/studentops?replicaSet=rs0
-
           JWT_ACCESS_SECRET: ci-test-access-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
           JWT_ACCESS_EXPIRES_IN: 15m
           JWT_REFRESH_EXPIRES_IN: 7d
-
           WEB_ORIGIN: http://localhost:5173
           COOKIE_SECURE: "false"
 
-      # --------------------------------------------------
-      # 10. Backend tests
-      # --------------------------------------------------
       - name: Backend tests
         run: pnpm --filter api test
         env:
           NODE_ENV: test
           PORT: 5000
-
           MONGODB_URL: mongodb://127.0.0.1:27017/studentops?replicaSet=rs0
-
           JWT_ACCESS_SECRET: ci-test-access-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
           JWT_ACCESS_EXPIRES_IN: 15m
           JWT_REFRESH_EXPIRES_IN: 7d
-
           WEB_ORIGIN: http://localhost:5173
           COOKIE_SECURE: "false"
 
-      # --------------------------------------------------
-      # 11. Frontend tests
-      # --------------------------------------------------
       - name: Frontend tests
         run: pnpm --filter web test
 
-      # --------------------------------------------------
-      # 12. Production build
-      # --------------------------------------------------
-      - name: Production build
       - name: Production build
         run: pnpm build
