@@ -1,3 +1,5 @@
+import { requestContext } from "./request-context.js";
+
 type LogLevel = "info" | "warn" | "error";
 
 type LogContext = Record<string, unknown>;
@@ -7,11 +9,14 @@ const writeLog = (
   message: string,
   context: LogContext = {},
 ): void => {
+  const requestId = requestContext.getRequestId();
+
   const entry = {
     timestamp: new Date().toISOString(),
     level,
     service: "studentops-api",
     message,
+    ...(requestId ? { requestId } : {}),
     ...context,
   };
 

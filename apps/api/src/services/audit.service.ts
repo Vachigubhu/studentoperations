@@ -1,7 +1,7 @@
 import { AuditLogModel } from "../models/AuditLog.js";
 import type { AuditAction } from "../models/AuditLog.js";
 
-type CreateAuditLogInput = {
+export type CreateAuditLogInput = {
   actorId: string;
   action: AuditAction;
   resourceType: string;

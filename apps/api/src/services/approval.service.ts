@@ -3,7 +3,7 @@ import { ApprovalModel } from "../models/Approval.js";
 import { RequestModel } from "../models/Request.js";
 import { UserModel } from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
-import { eventBus } from "../events/event-bus.js";
+import { emitEvent } from "../events/event-bus.js";
 import { EVENTS } from "../events/events.js";
 import { emitAuditEvent } from "../events/audit.js";
 
@@ -92,7 +92,7 @@ export const createApproval = async (
 
     await session.commitTransaction();
 
-    eventBus.emit(EVENTS.APPROVAL_DECISION, {
+    emitEvent(EVENTS.APPROVAL_DECISION, {
       requestId: request._id.toString(),
       studentId: request.student.toString(),
       decision,

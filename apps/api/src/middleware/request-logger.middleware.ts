@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { randomUUID } from "node:crypto";
 import { logger } from "../utils/logger.js";
+import { requestContext } from "../utils/request-context.js";
 
 declare global {
   namespace Express {
@@ -43,5 +44,7 @@ export const requestLogger: RequestHandler = (req, res, next) => {
     logger.info("HTTP request completed", logContext);
   });
 
-  next();
+  requestContext.run({ requestId }, () => {
+    next();
+  });
 };

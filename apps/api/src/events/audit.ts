@@ -1,4 +1,4 @@
-import { eventBus } from "./event-bus.js";
+import { emitEvent, eventBus } from "./event-bus.js";
 import { EVENTS } from "./events.js";
 import type { AuditAction } from "../models/AuditLog.js";
 
@@ -15,7 +15,7 @@ export const emitAuditEvent = (
   resourceId: string,
   options?: AuditEventOptions,
 ) => {
-  eventBus.emit(EVENTS.AUDIT_LOG, {
+  emitEvent(EVENTS.AUDIT_LOG, {
     actorId,
     action,
     resourceType,
