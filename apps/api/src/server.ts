@@ -7,6 +7,10 @@ import { createSocketServer } from "./socket/index.js";
 import http from "node:http";
 import { setSocketServer } from "./socket/socket-server.js";
 import { logger } from "./utils/logger.js";
+import { registerProcessErrorHandlers } from "./utils/process-error-handlers.js";
+import { registerShutdownHandlers } from "./utils/shutdown.js";
+
+registerProcessErrorHandlers()
 
 const startServer = async (): Promise<void> => {
   await connectDatabase();
@@ -16,7 +20,9 @@ const startServer = async (): Promise<void> => {
   const io = createSocketServer(httpServer);
 
   setSocketServer(io);
-
+  
+  registerShutdownHandlers(httpServer);
+  
   httpServer.listen(env.port, () => {
     logger.info("StudentOps API started", {
       port: env.port,
