@@ -9,6 +9,7 @@ import { env } from "./config/env.js";
 import swaggerUi from "swagger-ui-express";
 import { openApiDocument } from "./config/openapi.js";
 import cookieParser from "cookie-parser";
+import { requestLogger } from "./middleware/request-logger.middleware.js";
 
 const app = express();
 
@@ -22,6 +23,8 @@ app.use(
   }),
 );
 app.use(express.json());
+
+app.use(requestLogger);
 
 app.use(cookieParser());
 
