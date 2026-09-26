@@ -10,6 +10,7 @@ import swaggerUi from "swagger-ui-express";
 import { openApiDocument } from "./config/openapi.js";
 import cookieParser from "cookie-parser";
 import { requestLogger } from "./middleware/request-logger.middleware.js";
+import readinessRoutes from "./routes/readiness.route.js";
 
 const app = express();
 
@@ -33,6 +34,8 @@ app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 app.use("/api/v1", apiRateLimiter);
 
 app.use("/api/v1", apiRoutes);
+
+app.use("/api/v1/ready", readinessRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
